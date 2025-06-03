@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual envs
+venv/
+env/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Data — too large for git
+data/
+
+# Model checkpoints — too large for git
+models/*.pth
+models/*.h5
+
+# Outputs — keep charts and results, exclude large files only
+outputs/*.pt
+outputs/*.pth
+outputs/dashboard.html
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Streamlit
+.streamlit/
+
+# Logs
+*.log
+
+# Junk files
+git
+set
