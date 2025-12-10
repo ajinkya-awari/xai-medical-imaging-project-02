@@ -1,0 +1,21 @@
+{
+  "per_class_auc": {
+    "Atelectasis": 0.748,
+    "Cardiomegaly": 0.8119,
+    "Effusion": 0.8126,
+    "Infiltration": 0.6783,
+    "Mass": 0.735,
+    "Nodule": 0.7458,
+    "Pneumonia": 0.7047,
+    "Pneumothorax": 0.832,
+    "Consolidation": 0.7089,
+    "Edema": 0.8134,
+    "Emphysema": 0.8342,
+    "Fibrosis": 0.773,
+    "Pleural_Thickening": 0.7199,
+    "Hernia": 0.8472
+  },
+  "mean_auc": 0.7689214285714286,
+  "epoch": 6,
+  "val_auc": 0.8131470680407658
+}
