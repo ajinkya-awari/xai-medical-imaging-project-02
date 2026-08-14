@@ -29,6 +29,13 @@ Observed failure path: `FAILURE_PATH_EVENTS=['init', 'finish']`.
 
 No `.env`, credentials, NIH data, model weights, or `__results___files/` changes were made.
 
+### Current Day 5 blocker - 2026-08-14
+
+- Local data check: `CSV present: False`; `PNG count: 0`.
+- Online W&B check: not completed; `wandb.init()` rejected the loaded clipboard value as an invalid API key.
+- Safe stop: no data download, `.env` creation, credential commit, model training, or Day 6 work was performed.
+- Resume condition: load a clean W&B API key without exposing it, choose an approved smoke-data path, then run the bounded online validation.
+
 ## Day 6 - API/Docker gate (future)
 
 - [ ] `python -m pytest -q` and focused API tests pass.

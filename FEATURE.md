@@ -10,9 +10,9 @@ The current implementation feature is Day 5 W&B tracking. The remaining approved
 - **Non-goals:** Grad-CAM logging, API/Docker work, HF uploads, live deployment, and model/data changes.
 - **Plan and risk:** Protect secret files first; use exact `CFG` and metric names; validate offline because no approved credential is present.
 - **Tests and expected output:** Four focused contract tests; offline one-epoch fixture with one W&B run file; failure-path finish check.
-- **Implementation result:** Local implementation verified; live cloud dashboard remains unverified pending approved credential.
+- **Implementation result:** Local implementation verified; live cloud dashboard remains unverified because authentication and an approved smoke-data path remain pending.
 - **Diff review and commit:** Complete staged diff reviewed line by line; committed as `feat: add W&B experiment tracking`.
-- **Handoff:** Keep Day 6 paused until the Day 5 gate and external W&B decision are resolved.
+- **Handoff:** Resume tomorrow with clean W&B key loading and an explicit smoke-data decision; keep Day 6 paused.
 
 ## Feature record template
 

@@ -33,6 +33,14 @@ This is a concise decision ledger, not a chat transcript. Add one entry for ever
 - **Why:** A blank or ambient credential would weaken the secret boundary and create an external side effect not required for secret-free local verification.
 - **Verification:** `.env.example` contains only blank `WANDB_API_KEY=` and `HF_TOKEN=` placeholders; offline mode was used and no `.env` exists.
 
+## D-005 - Pause after safe offline verification
+
+- **Date / AI:** 2026-08-14 / Codex (GPT-5)
+- **Decision:** Stop Day 5 after the documented offline verification and postpone live W&B validation until a clean API key and an approved smoke-data path are available. Do not download NIH data or save credentials in the repository.
+- **Alternatives:** accept the malformed clipboard value; download the dataset immediately; substitute synthetic data as if it were the real acceptance smoke.
+- **Why:** The local repository has no `data\Data_Entry_2017.csv` and no PNG images, and W&B rejected the loaded value as an invalid API key. Claiming the live gate would be misleading.
+- **Verification:** `CSV present: False`, `PNG count: 0`; online `wandb.init()` failed with an invalid-key authentication error; no `.env`, data, model, or source-code changes were made.
+
 ## Entry template
 
 ```text
