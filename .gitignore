@@ -8,10 +8,16 @@ dist/
 build/
 .eggs/
 
+# Local Claude Code control plane — never publish agent instructions or memory
+.claude/
+
 # Virtual envs
 venv/
 env/
 .env/
+.env
+.env.*
+!.env.example
 
 # IDE
 .vscode/

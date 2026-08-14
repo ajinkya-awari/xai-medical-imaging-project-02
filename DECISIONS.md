@@ -1,0 +1,47 @@
+# DECISIONS — XAI Medical Imaging / Project 01
+
+This is a concise decision ledger, not a chat transcript. Add one entry for every meaningful technical or process choice.
+
+## D-001 — Shared inference boundary is required before serving surfaces
+
+- **Date / AI:** 2026-08-14 / Codex (GPT-5)
+- **Decision:** Use a future `src/inference.py` as the single model-loading, preprocessing, prediction, and Grad-CAM boundary for Streamlit and FastAPI.
+- **Alternatives:** duplicate loaders in `app.py` and `api/main.py`; expose raw model internals directly.
+- **Why:** The source-specific scan found no existing `load_model()`/`run_inference()` helpers. One boundary prevents preprocessing, checkpoint-key, and label-order drift.
+- **Verification:** Must be proven by imports/tests after the freeze is released; not implemented in this session.
+
+## D-002 — Local control plane is separate from public implementation
+
+- **Date / AI:** 2026-08-14 / Codex (GPT-5)
+- **Decision:** Keep `.claude/` gitignored and keep living records small, factual, and secret-free.
+- **Why:** Agent instructions and session state are useful locally but are not product artifacts; public code must not contain credentials or restricted data.
+- **Verification:** `.gitignore`, secret scan, and source diff audit before implementation.
+
+## D-003 - Day 5 W&B tracking remains scalar and lifecycle-safe
+
+- **Date / AI:** 2026-08-14 / Codex (GPT-5)
+- **Decision:** Initialize one W&B run with the verified `CFG` fields, log the required scalar metrics in both warm-up and fine-tune loops, and always call `wandb.finish()` from a `finally` block. Do not add Grad-CAM logging to Day 5.
+- **Alternatives:** log only the fine-tune loop; add a fixed validation image now; call `wandb.finish()` only on success.
+- **Why:** The approved design requires both loops and scalar credibility, while the vulnerability review explicitly makes Grad-CAM optional and the checklist requires cleanup on failure.
+- **Verification:** Focused AST contract tests pass; offline one-epoch fixture produced a local W&B run with `epoch`, `lr`, `phase`, `train_loss`, `train_auc`, `val_loss`, and `val_auc`; loader-failure fixture observed `init` then `finish`.
+
+## D-004 - No real credential file during local verification
+
+- **Date / AI:** 2026-08-14 / Codex (GPT-5)
+- **Decision:** Commit only `.env.example`; do not create `.env` or run online W&B syncing without a user-approved credential.
+- **Alternatives:** create a blank `.env`; use an ambient credential for a live run.
+- **Why:** A blank or ambient credential would weaken the secret boundary and create an external side effect not required for secret-free local verification.
+- **Verification:** `.env.example` contains only blank `WANDB_API_KEY=` and `HF_TOKEN=` placeholders; offline mode was used and no `.env` exists.
+
+## Entry template
+
+```text
+### D-XXX — [decision]
+- Date / AI/model:
+- Decision:
+- Alternatives:
+- Why:
+- Verification:
+```
+
+**Update rule:** Record the reason before or with the change, including the AI/model version that made the recommendation.
