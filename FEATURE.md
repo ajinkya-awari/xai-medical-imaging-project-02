@@ -26,6 +26,18 @@ The current implementation includes Day 5 W&B tracking and the local shared infe
 - **Diff review and commit:** Complete staged diff reviewed; no weights, data, credentials, or `__results___files/` were staged.
 - **Handoff:** Activate the verified `.venv`; then run the approved NIH smoke and Docker checks when their user-side prerequisites are available.
 
+### FEAT-2026-08-15-3 - smoke_train.py and headless opencv fix
+
+- **Scope and user value:** Add the bounded NIH smoke script and fix the opencv Docker violation so the Day 5 and Day 6 gates can be closed.
+- **Approved spec/design section:** CLAUDE.md Rule 5 (headless opencv); Day 5 NIH smoke requirement; D-009/D-010 decisions.
+- **Files and interfaces:** `smoke_train.py` (new), `requirements.txt` (opencv-python → opencv-python-headless), `Dockerfile` (drop libgl1), `README.md` (Kaggle section rewrite).
+- **Non-goals:** model training beyond the approved 256-sample/1-epoch smoke; external deployment; credential storage; NIH data download.
+- **Plan and risk:** `smoke_train.py` patches `CFG` fields at import time, before `src.train` is loaded. Risk: if Kaggle mount path changes, `config.py` auto-detection fails gracefully (falls back to `data/`). The headless change is API-identical; no source inference change.
+- **Tests and expected output:** `pytest -q` → `10 passed in 5.52s`. Docker build result pending Docker Desktop installation. Smoke result pending Kaggle run.
+- **Implementation result:** `smoke_train.py` written; requirements/Dockerfile updated; README Kaggle section rewritten; all control-plane records updated (2026-08-15).
+- **Diff review and commit:** Complete diff reviewed. `git diff --check` → PASS. No credentials, data, weights, or `__results___files/` staged.
+- **Handoff:** Run `smoke_train.py` on a new Kaggle notebook; record the W&B URL; install Docker Desktop and run `docker compose build`.
+
 ## Feature record template
 
 ```text

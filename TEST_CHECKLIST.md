@@ -12,7 +12,7 @@ This is the concrete done gate. Commands run from `E:\Projects\xai-medical-imagi
 
 ## Day 5 - W&B gate
 
-- [ ] `python -m pytest -q` passed before editing `src/train.py` (baseline had no tests and exited 1; focused tests were then added).
+- [x] `python -m pytest -q` — `10 passed in 5.52s` (2026-08-15, .venv activated, all inference/API/W&B contract tests pass).
 - [x] `rg -n "from src\\.config|import config|from config" src/train.py` recorded the verified `from src.config import CFG` import.
 - [ ] A one-epoch/256-sample NIH smoke run logged the required metrics (not run: no local NIH fixture and no approved data path).
 - [x] `WANDB_MODE=offline` was used for a secret-free one-epoch fixture; the later live check used a session-only approved key.
@@ -31,10 +31,12 @@ No `.env`, credentials, NIH data, model weights, or `__results___files/` changes
 
 ### Current Day 5 blocker - 2026-08-15
 
-- Local data check: `CSV present: False`; `PNG count: 0`.
+- Local data check: `CSV present: False`; `train_val_list.txt: False`; `test_list.txt: False`; `images/ dir: False`; `PNG count: 0`.
 - Online W&B check: completed; authenticated user `ajinkya18072001` and connectivity run `qwqgfql2` synced successfully.
 - Safe stop: no data download, `.env` creation, credential commit, model training, or model artifact upload was performed.
-- Resume condition: choose an approved smoke-data path, then run the bounded real NIH validation; do not treat the connectivity check as a training run.
+- Approved smoke path: **Kaggle notebook** — `smoke_train.py` added to repo (256 samples, 1 epoch, warmup only). NIH dataset is pre-mounted on Kaggle; W&B key goes into Kaggle Secrets. See README "Training on Kaggle" and `smoke_train.py` docstring for exact steps.
+- Resume condition: open a new Kaggle notebook, follow the steps in `smoke_train.py`, run the bounded smoke, copy the W&B run URL, and record it in the box below. Do not treat the connectivity check as a training run.
+- [ ] NIH smoke W&B run URL: _____________________________________________
 
 ### Day 5 online authentication verification - 2026-08-15
 
@@ -54,9 +56,10 @@ No `.env`, credentials, NIH data, model weights, or `__results___files/` changes
 
 ### Day 6 verification record - 2026-08-15
 
-- `python -m pytest -q tests/test_inference_api_contract.py tests/test_day5_wandb_contract.py` -> `10 passed`.
-- `python -m py_compile src/inference.py api/main.py app.py` -> passed; `git diff --check` -> passed.
-- Docker verification -> not run: `docker` and `docker compose` are not installed in this environment.
+- `python -m pytest -q` (2026-08-15 gate check): `10 passed in 5.52s` in isolated `.venv` with `torch==2.12.1+cpu` / `torchvision==0.27.1+cpu`.
+- `git diff --check` -> PASS (no trailing whitespace; LF→CRLF autocrlf warnings are cosmetic).
+- Docker verification -> not run: `docker --version` and `docker compose version` both return "not recognized" — Docker Desktop is not installed in this environment. Gate remains open until Docker Desktop is installed.
+- `requirements.txt` corrected: `opencv-python` → `opencv-python-headless` (Rule 5 fix). Dockerfile `libgl1` apt package removed (headless no longer needs it). These are a single atomic change that must be verified by a Docker build once Docker Desktop is available.
 - Global Python still has `torch 2.13.0` / `torchvision 0.25.0+cpu` native mismatch; the isolated project `.venv` resolves it with the matched CPU pair above.
 
 ## Day 7 - Streamlit/Space gate

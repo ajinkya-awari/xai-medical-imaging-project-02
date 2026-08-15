@@ -65,6 +65,22 @@ This is a concise decision ledger, not a chat transcript. Add one entry for ever
 - **Why:** The matched pair loads the existing checkpoint and preserves the model architecture and Grad-CAM path without changing source behavior.
 - **Verification:** Imports passed, checkpoint load passed, full test suite returned `10 passed`, and the real synthetic FastAPI request returned `200` with 14 labels and Grad-CAM.
 
+## D-009 - Kaggle notebook is the approved NIH smoke path
+
+- **Date / AI/model:** 2026-08-15 / Claude (coding-fallback)
+- **Decision:** Use a Kaggle notebook to run the bounded 256-sample/1-epoch NIH smoke. The NIH dataset is pre-mounted at `/kaggle/input/datasets/organizations/nih-chest-xrays/data`, which `config.py` already detects automatically. The W&B API key is injected via Kaggle Secrets — never written to a file or command line. `smoke_train.py` overrides `MAX_SAMPLES=256`, `NUM_EPOCHS=1`, and `MODEL_FILENAME="smoke_densenet121_chestxray.pth"` without touching production code or the production checkpoint.
+- **Alternatives:** download the full 40GB NIH dataset locally; use a synthetic fixture as a stand-in for real data; skip the smoke and claim the gate is closed.
+- **Why:** Local NIH data is absent and will not be downloaded automatically (Rule: explicit user approval required). Kaggle has the dataset pre-mounted and free GPU. Synthetic fixtures were already used for contract tests but do not satisfy the real-data smoke criterion. The production checkpoint must not be overwritten by a 1-epoch smoke run.
+- **Verification:** `smoke_train.py` exists in the repo; `config.py` Kaggle auto-detection confirmed. Gate remains open until the W&B run URL is recorded in `TEST_CHECKLIST.md`.
+
+## D-010 - opencv-python-headless replaces opencv-python
+
+- **Date / AI/model:** 2026-08-15 / Claude (coding-fallback)
+- **Decision:** Replace `opencv-python>=4.8.0` with `opencv-python-headless>=4.8.0` in `requirements.txt`. Remove the `libgl1` apt package from the Dockerfile (headless does not need the GUI library). API is identical for all operations in the project (image read, resize, color conversion, overlay blending).
+- **Alternatives:** keep `opencv-python` with the `libgl1` workaround (heavier image, non-standard); suppress the import error at runtime.
+- **Why:** Non-negotiable Rule 5 from `CLAUDE.md`; headless is the correct choice for a slim server container. The `libgl1` apt package is only needed by the GUI renderer (OpenGL) which is never used here.
+- **Verification:** `git diff --check` → PASS. Docker build with the updated pair cannot be run until Docker Desktop is installed; this change is safe to stage and commit now as the API is identical.
+
 ## Entry template
 
 ```text

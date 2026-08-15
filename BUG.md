@@ -36,6 +36,17 @@ No active implementation bug is open. This file is a trace, not a generic backlo
 
 Known planning hazards are recorded in `tasks/lessons.md` and `FINAL_VULNERABILITY_SCAN.md`; do not mark them fixed until runtime evidence exists.
 
+### BUG-2026-08-15-3 — opencv-python (non-headless) survived through multiple commits (fixed)
+
+- **Found in / reproduction:** `grep opencv requirements.txt` returns `opencv-python>=4.8.0` in HEAD. CLAUDE.md Rule 5 mandates `opencv-python-headless`. The Dockerfile added `libgl1` as a workaround but the root violation was never corrected.
+- **Expected vs actual:** `requirements.txt` should contain `opencv-python-headless>=4.8.0`; actual was `opencv-python>=4.8.0` from the original repo baseline.
+- **Evidence:** `git grep opencv` → one match in `requirements.txt`; Dockerfile contained `libgl1` apt install as the downstream symptom.
+- **Root cause:** The non-headless package was present in the pre-existing repo before the Day 5/6 implementation; no commit audited it against Rule 5.
+- **Fix and files:** `requirements.txt` line 15 changed to `opencv-python-headless>=4.8.0`; `Dockerfile` `libgl1` removed from the apt install list. API is identical for all project operations.
+- **Regression test:** `python -m pytest -q` still returns `10 passed` after the change (headless does not affect Python-side API). Docker build verification pending Docker Desktop installation.
+- **Verification result:** `git diff --check` PASS; test suite PASS. Docker build unverified until Docker Desktop available.
+- **Commit / rollback:** Staged in this session's commit; no rollback risk (headless is a strict superset for server use).
+
 **Update rule:** One trace per bug, from discovery to verification; do not overwrite historical records.
 
 ### BUG-2026-08-15-2 - Native torch/torchvision mismatch in global interpreter (resolved by project venv)

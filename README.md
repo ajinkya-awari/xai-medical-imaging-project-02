@@ -252,8 +252,24 @@ The model in this repository was trained on Kaggle with free T4 GPU. To reproduc
 1. Go to [kaggle.com](https://kaggle.com) → New Notebook
 2. Add the NIH dataset: **+ Add Data** → search `NIH Chest X-rays` (by `nih-chest-xrays`) → Add
 3. Set accelerator: **GPU T4 x2**
-4. Use the Kaggle training notebook: `chestxplain_kaggle.ipynb` (included in this repo)
-5. Run all cells — training completes in ~2.5 hours
+4. Add your W&B API key: Notebook sidebar → **Secrets** → Add `WANDB_API_KEY` → toggle **Attach to notebook** ON
+5. In the first cell, clone the repo and install dependencies:
+   ```python
+   from kaggle_secrets import UserSecretsClient
+   import os
+   os.environ["WANDB_API_KEY"] = UserSecretsClient().get_secret("WANDB_API_KEY")
+   !git clone https://github.com/ajinkya-awari/xai-medical-imaging.git
+   %cd xai-medical-imaging
+   !pip install -q -r requirements.txt
+   ```
+6. For the bounded smoke run (256 samples, 1 epoch — closes the Day 5 gate):
+   ```python
+   !python smoke_train.py
+   ```
+7. For full training (20K samples, 10 epochs, ~2.5 hours):
+   ```python
+   !python run_all.py
+   ```
 
 ---
 
