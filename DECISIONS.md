@@ -5,10 +5,10 @@ This is a concise decision ledger, not a chat transcript. Add one entry for ever
 ## D-001 — Shared inference boundary is required before serving surfaces
 
 - **Date / AI:** 2026-08-14 / Codex (GPT-5)
-- **Decision:** Use a future `src/inference.py` as the single model-loading, preprocessing, prediction, and Grad-CAM boundary for Streamlit and FastAPI.
+- **Decision:** Use `src/inference.py` as the single model-loading, preprocessing, prediction, and Grad-CAM boundary for Streamlit and FastAPI.
 - **Alternatives:** duplicate loaders in `app.py` and `api/main.py`; expose raw model internals directly.
 - **Why:** The source-specific scan found no existing `load_model()`/`run_inference()` helpers. One boundary prevents preprocessing, checkpoint-key, and label-order drift.
-- **Verification:** Must be proven by imports/tests after the freeze is released; not implemented in this session.
+- **Verification:** Shared imports, `10 passed` contract tests, real checkpoint loading, and a real synthetic FastAPI prediction passed in the isolated `.venv`.
 
 ## D-002 — Local control plane is separate from public implementation
 
@@ -56,6 +56,14 @@ This is a concise decision ledger, not a chat transcript. Add one entry for ever
 - **Alternatives:** duplicate inference code in each UI; auto-download weights; silently serve random predictions.
 - **Why:** One boundary prevents label/preprocessing drift, while fail-closed prediction avoids presenting untrained outputs as medical results and keeps diagnostics available.
 - **Verification:** `10 passed` focused/API and W&B contract tests; the isolated `.venv` loaded the existing checkpoint and returned a real synthetic FastAPI prediction with 14 labels and Grad-CAM; global interpreter mismatch remains documented.
+
+## D-008 - Isolated matched CPU runtime for Project 01
+
+- **Date / AI/model:** 2026-08-15 / Codex (GPT-5)
+- **Decision:** Use the ignored project-local `.venv` with `torch==2.12.1+cpu` and `torchvision==0.27.1+cpu`; do not run Project 01 from the mismatched global interpreter.
+- **Alternatives:** modify the global environment; bypass torchvision; use random weights for validation.
+- **Why:** The matched pair loads the existing checkpoint and preserves the model architecture and Grad-CAM path without changing source behavior.
+- **Verification:** Imports passed, checkpoint load passed, full test suite returned `10 passed`, and the real synthetic FastAPI request returned `200` with 14 labels and Grad-CAM.
 
 ## Entry template
 

@@ -5,11 +5,11 @@ This describes the intended execution path and is updated only when the real cod
 ## Current path (existing application)
 
 1. `app.py` starts Streamlit and accepts an uploaded image.
-2. The app loads the current checkpoint through its existing model-download/load path.
-3. The image is transformed for DenseNet121 inference.
-4. `src/model.py` produces 14 raw logits.
-5. Sigmoid probabilities and `src/gradcam.py` produce the prediction view/overlay.
-6. Streamlit renders labels, probabilities, and the research disclaimer.
+2. The app loads the approved local checkpoint through `src.inference.load_checkpoint_model`; it does not auto-download or use random weights.
+3. `src.inference.preprocess_image` transforms the image for DenseNet121 inference.
+4. `src.model.py` produces 14 raw logits.
+5. `src.inference.predict_probabilities` and `src.inference.generate_gradcam_overlay` produce the prediction view/overlay.
+6. Streamlit renders labels, probabilities, overlays, and the research disclaimer.
 
 ## Current implementation path (Day 5)
 

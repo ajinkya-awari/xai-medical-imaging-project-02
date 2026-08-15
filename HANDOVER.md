@@ -21,6 +21,12 @@ The Day 5 commit was created after complete diff review and verification. A late
 
 Online W&B authentication is verified, but the real one-epoch/256-sample NIH smoke remains open because the local dataset is absent (`CSV present: False`, `PNG count: 0`). Real checkpoint inference and the FastAPI synthetic-image path now pass in the isolated `.venv`; Docker is still unavailable locally. Do not claim the NIH or Docker gates as passed.
 
+## Explicitly pending
+
+1. **Day 5 real smoke:** obtain an approved NIH data path and run the bounded one-epoch/256-sample training check with the session-only W&B credential.
+2. **Docker gate:** install Docker Desktop, then run `docker compose build` and `docker compose up`; record the result.
+3. **External deployment:** no public Space, hosted API, model upload, or model card is authorized or claimed.
+
 ## Five-line session handoff
 
 1. Done: added W&B dependency, `.env.example`, verified config, and two-loop scalar logging (2026-08-14).
