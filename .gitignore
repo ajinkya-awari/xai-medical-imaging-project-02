@@ -53,6 +53,9 @@ outputs/dashboard.html
 # Logs
 *.log
 
+# W&B run logs — local artifacts, never published
+wandb/
+
 # Junk files
 git
 set

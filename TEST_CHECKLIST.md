@@ -36,6 +36,13 @@ No `.env`, credentials, NIH data, model weights, or `__results___files/` changes
 - Safe stop: no data download, `.env` creation, credential commit, model training, or Day 6 work was performed.
 - Resume condition: load a clean W&B API key without exposing it, choose an approved smoke-data path, then run the bounded online validation.
 
+### Day 5 online authentication verification - 2026-08-15
+
+- Command: `python -c "import wandb; print(wandb.Api().viewer.username)"` — result: authenticated as `ajinkya18072001`. Key was loaded via `$env:WANDB_API_KEY` in the current PowerShell session only (masked `Read-Host -AsSecureString` prompt), never written to `.env`, a command line, chat, or any file.
+- Command: `python -c "import wandb; run = wandb.init(project='xai-medical-imaging', job_type='connectivity-check'); wandb.log({'connectivity_check': 1}); print(run.url); run.finish()"` — result: live run synced successfully at `https://wandb.ai/ajinkya18072001-university-college-london-ucl-/xai-medical-imaging/runs/qwqgfql2`.
+- An earlier candidate API key was accidentally exposed in chat during clipboard troubleshooting; it was revoked on wandb.ai and the local PowerShell history file was cleared before the successful attempt above.
+- Remaining Day 5 blocker: only the real one-epoch/256-sample NIH smoke run — `CSV present: False`, `PNG count: 0`, no approved smoke-data path chosen. The Day 5 dashboard gate stays unchecked until that run is logged.
+
 ## Day 6 - API/Docker gate (future)
 
 - [ ] `python -m pytest -q` and focused API tests pass.

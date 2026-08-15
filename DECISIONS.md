@@ -41,6 +41,14 @@ This is a concise decision ledger, not a chat transcript. Add one entry for ever
 - **Why:** The local repository has no `data\Data_Entry_2017.csv` and no PNG images, and W&B rejected the loaded value as an invalid API key. Claiming the live gate would be misleading.
 - **Verification:** `CSV present: False`, `PNG count: 0`; online `wandb.init()` failed with an invalid-key authentication error; no `.env`, data, model, or source-code changes were made.
 
+## D-006 - Online W&B key loaded session-only, never persisted or shown
+
+- **Date / AI:** 2026-08-15 / Claude (Sonnet 5)
+- **Decision:** Load the W&B API key into `$env:WANDB_API_KEY` for the current PowerShell session only, via a masked `Read-Host -AsSecureString` prompt fed by the clipboard, rather than typing it into a command, `.env`, or any file. Verify auth via `wandb.Api().viewer.username` and a single throwaway connectivity run before considering any real smoke run.
+- **Alternatives:** write the key to `.env`; pass it as a CLI argument; use the interactive `wandb login --relogin` prompt directly.
+- **Why:** `.env`/CLI-argument approaches risk disk persistence (git, shell history); `wandb login --relogin`'s own prompt aborted in this terminal. The masked-prompt + session-env-var pattern keeps the key out of chat, files, and command history.
+- **Verification:** `wandb.Api().viewer.username` returned `ajinkya18072001`; a connectivity run synced to `https://wandb.ai/ajinkya18072001-university-college-london-ucl-/xai-medical-imaging/runs/qwqgfql2`. No `.env` was created and `$env:WANDB_API_KEY` does not persist beyond the session.
+
 ## Entry template
 
 ```text

@@ -13,6 +13,12 @@ No active implementation bug is open. This file is a trace, not a generic backlo
 - The online check was blocked by an invalid clipboard value, not by the Day 5 source implementation. The key was never written to the repository.
 - The real-data smoke path is also blocked because `data\Data_Entry_2017.csv` and PNG images are absent locally.
 
+## Session verification - W&B online auth resolved - 2026-08-15
+
+- Windows clipboard content was unreliable when read via PowerShell's `Get-Clipboard` shortly after copying from the browser (observed lengths 0, 27, 75, and 122 characters with non-key content mixed in across several attempts), consistent with the OmniRoute clipboard interference noted earlier in the day. A direct paste into Notepad showed clean content, isolating the issue to the gap between copy and the `Get-Clipboard` read rather than the copy action itself.
+- Fix: bypass `Get-Clipboard` entirely — paste directly into a masked `Read-Host -AsSecureString` prompt immediately after copying. This produced a clean, validating key on the next attempt.
+- Separate incident: during troubleshooting, a candidate API key was pasted into chat by the user despite explicit instructions not to, and once landed in a PowerShell command line before the masked prompt appeared, risking persistence in the local PSReadLine history file. Remediation: the key was revoked on wandb.ai and the PowerShell history file (`(Get-PSReadLineOption).HistorySavePath`) was deleted before the successful, non-exposed attempt. No key value was ever committed, logged by the agent, or written to a repository file.
+
 ## Bug record template
 
 ```text
