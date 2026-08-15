@@ -12,7 +12,7 @@ class GradCAM:
         self._hooks = []
         target = model.features.denseblock4
         self._hooks.append(target.register_forward_hook(lambda m, i, o: setattr(self, "acts", o)))
-        self._hooks.append(target.register_backward_hook(lambda m, gi, go: setattr(self, "grads", go[0])))
+        self._hooks.append(target.register_full_backward_hook(lambda m, gi, go: setattr(self, "grads", go[0])))
 
     def generate(self, input_tensor, class_idx):
         self.model.eval()
