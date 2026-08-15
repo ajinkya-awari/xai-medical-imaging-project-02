@@ -37,3 +37,11 @@ No active implementation bug is open. This file is a trace, not a generic backlo
 Known planning hazards are recorded in `tasks/lessons.md` and `FINAL_VULNERABILITY_SCAN.md`; do not mark them fixed until runtime evidence exists.
 
 **Update rule:** One trace per bug, from discovery to verification; do not overwrite historical records.
+
+### BUG-2026-08-15-2 - Native torch/torchvision mismatch blocks real checkpoint load
+
+- **Observed:** Contract tests pass, but loading the pre-existing checkpoint imports `torchvision` and fails with `RuntimeError: operator torchvision::nms does not exist` / a Windows native DLL load failure.
+- **Evidence:** Environment reports `torch 2.13.0` and `torchvision 0.25.0+cpu`; `python -c "import torchvision"` reproduces the failure.
+- **Impact:** Health/metadata are intentionally resilient; real model inference and the NIH smoke run are not claimed.
+- **Next action:** Repair the environment with a compatible, supported torch/torchvision pair in a separate environment, then verify checkpoint loading before running any real data.
+- **Scope:** No source repository, credentials, data, weights, or external artifact was changed to work around this issue.

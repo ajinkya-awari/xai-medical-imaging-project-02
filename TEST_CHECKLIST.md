@@ -14,8 +14,8 @@ This is the concrete done gate. Commands run from `E:\Projects\xai-medical-imagi
 
 - [ ] `python -m pytest -q` passed before editing `src/train.py` (baseline had no tests and exited 1; focused tests were then added).
 - [x] `rg -n "from src\\.config|import config|from config" src/train.py` recorded the verified `from src.config import CFG` import.
-- [ ] A one-epoch/256-sample NIH smoke run logged the required metrics (not run: no local NIH fixture and no data download authorized).
-- [x] `WANDB_MODE=offline` was used for a secret-free one-epoch fixture; no live run was attempted without an approved credential.
+- [ ] A one-epoch/256-sample NIH smoke run logged the required metrics (not run: no local NIH fixture and no approved data path).
+- [x] `WANDB_MODE=offline` was used for a secret-free one-epoch fixture; the later live check used a session-only approved key.
 - [x] `wandb.finish()` executed on success and failure paths (offline run plus loader-failure fixture).
 - [x] `.gitignore` already contained `.env`, `.env.*`, and `!.env.example` at baseline; `.env.example` was added with blank placeholders.
 - [x] `wandb` was added to `requirements.txt` and installed as `wandb==0.28.2` for verification.
@@ -29,12 +29,12 @@ Observed failure path: `FAILURE_PATH_EVENTS=['init', 'finish']`.
 
 No `.env`, credentials, NIH data, model weights, or `__results___files/` changes were made.
 
-### Current Day 5 blocker - 2026-08-14
+### Current Day 5 blocker - 2026-08-15
 
 - Local data check: `CSV present: False`; `PNG count: 0`.
-- Online W&B check: not completed; `wandb.init()` rejected the loaded clipboard value as an invalid API key.
-- Safe stop: no data download, `.env` creation, credential commit, model training, or Day 6 work was performed.
-- Resume condition: load a clean W&B API key without exposing it, choose an approved smoke-data path, then run the bounded online validation.
+- Online W&B check: completed; authenticated user `ajinkya18072001` and connectivity run `qwqgfql2` synced successfully.
+- Safe stop: no data download, `.env` creation, credential commit, model training, or model artifact upload was performed.
+- Resume condition: choose an approved smoke-data path, then run the bounded real NIH validation; do not treat the connectivity check as a training run.
 
 ### Day 5 online authentication verification - 2026-08-15
 
@@ -43,18 +43,30 @@ No `.env`, credentials, NIH data, model weights, or `__results___files/` changes
 - An earlier candidate API key was accidentally exposed in chat during clipboard troubleshooting; it was revoked on wandb.ai and the local PowerShell history file was cleared before the successful attempt above.
 - Remaining Day 5 blocker: only the real one-epoch/256-sample NIH smoke run — `CSV present: False`, `PNG count: 0`, no approved smoke-data path chosen. The Day 5 dashboard gate stays unchecked until that run is logged.
 
-## Day 6 - API/Docker gate (future)
+## Day 6 - API/Docker gate
 
-- [ ] `python -m pytest -q` and focused API tests pass.
-- [ ] `/health` and `/metadata` return 200 with the disclaimer and correct 14-label metadata.
-- [ ] `/predict` accepts PNG/JPEG, rejects non-image/over-10MB/unreadable uploads with 400, and returns all 14 probabilities plus top prediction, confidence, and base64 Grad-CAM.
-- [ ] Model loads once in lifespan; checkpoint uses `model_state_dict`.
+- [x] Focused inference/API and Day 5 contract tests pass: `10 passed`.
+- [x] TestClient checks `/health` and `/metadata` return 200 with the disclaimer and 14-label metadata.
+- [x] Contract checks reject non-image and over-10MB uploads with 400; fake-model contract checks the all-label/top-prediction/confidence/base64 response shape.
+- [x] API lifespan attempts one local checkpoint load per process and requires nested `model_state_dict`; no random-weight fallback exists.
 - [ ] `docker compose build` and `docker compose up` succeed from a clean clone without local weights.
 
-## Day 7 - Streamlit/Space gate (future)
+### Day 6 verification record - 2026-08-15
 
-- [ ] Streamlit and FastAPI use the same inference boundary.
+- `python -m pytest -q tests/test_inference_api_contract.py tests/test_day5_wandb_contract.py` -> `10 passed`.
+- `python -m py_compile src/inference.py api/main.py app.py` -> passed; `git diff --check` -> passed.
+- Docker verification -> not run: `docker` and `docker compose` are not installed in this environment.
+- Real model inference -> blocked by the local `torch 2.13.0` / `torchvision 0.25.0+cpu` native mismatch (`torchvision::nms`/DLL load failure); no claim of checkpoint inference is made.
+
+## Day 7 - Streamlit/Space gate
+
+- [x] Streamlit and FastAPI import the shared `src.inference` boundary.
 - [ ] Public Space/model card links are verified; no restricted data is present.
-- [ ] README distinguishes local `/docs` from a hosted public API.
+- [x] README distinguishes local `/docs` from a hosted public API.
+
+### Day 7 verification record - 2026-08-15
+
+- README now documents local Streamlit/API commands, the local `/docs` boundary, checkpoint requirements, and the unclaimed external-deployment boundary.
+- No public Space, model registry upload, hosted API, or model-card URL was created or claimed.
 
 **Update rule:** Add the exact command and observed result for every new gate; do not mark a box from an agent summary alone.

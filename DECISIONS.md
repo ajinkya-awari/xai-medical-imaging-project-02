@@ -49,6 +49,14 @@ This is a concise decision ledger, not a chat transcript. Add one entry for ever
 - **Why:** `.env`/CLI-argument approaches risk disk persistence (git, shell history); `wandb login --relogin`'s own prompt aborted in this terminal. The masked-prompt + session-env-var pattern keeps the key out of chat, files, and command history.
 - **Verification:** `wandb.Api().viewer.username` returned `ajinkya18072001`; a connectivity run synced to `https://wandb.ai/ajinkya18072001-university-college-london-ucl-/xai-medical-imaging/runs/qwqgfql2`. No `.env` was created and `$env:WANDB_API_KEY` does not persist beyond the session.
 
+## D-007 - Shared local inference boundary and fail-closed serving
+
+- **Date / AI/model:** 2026-08-15 / Codex (GPT-5)
+- **Decision:** Put checkpoint loading, preprocessing, sigmoid probabilities, Grad-CAM cleanup, and PNG encoding in `src/inference.py`; have FastAPI and Streamlit use it. Never fall back to random weights; keep health and metadata available when a checkpoint is missing or incompatible.
+- **Alternatives:** duplicate inference code in each UI; auto-download weights; silently serve random predictions.
+- **Why:** One boundary prevents label/preprocessing drift, while fail-closed prediction avoids presenting untrained outputs as medical results and keeps diagnostics available.
+- **Verification:** `10 passed` focused/API and W&B contract tests; `git diff --check` and Python compilation passed. Real checkpoint loading remains blocked by the documented local torch/torchvision mismatch.
+
 ## Entry template
 
 ```text

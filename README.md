@@ -112,6 +112,7 @@ xai-medical-imaging/
 │   ├── config.py          # Hyperparameters, paths, disease labels
 │   ├── dataset.py         # Data loading, transforms, train/val/test split
 │   ├── model.py           # DenseNet121 architecture + freeze/unfreeze utilities
+│   ├── inference.py       # Shared preprocessing, prediction, Grad-CAM, encoding
 │   ├── train.py           # Two-phase training loop with checkpointing
 │   ├── evaluate.py        # Test set evaluation, AUC computation, ROC curves
 │   ├── gradcam.py         # Grad-CAM implementation + overlay generation
@@ -122,7 +123,11 @@ xai-medical-imaging/
 │   ├── roc_curves.png     # ROC curves for all 14 diseases
 │   ├── gradcam_samples.png # Grad-CAM on real NIH X-rays
 │   └── test_results.json  # Full AUC numbers
+├── api/
+│   └── main.py            # FastAPI health, metadata, and prediction endpoints
 ├── app.py                 # Streamlit web application
+├── Dockerfile             # CPU API image
+├── compose.yaml           # Local API composition
 ├── run_all.py             # Master script (train → evaluate → visualise)
 ├── requirements.txt
 ├── packages.txt
@@ -205,6 +210,38 @@ streamlit run app.py
 ```
 
 Open `http://localhost:8501` in your browser, upload a chest X-ray, and explore the predictions and Grad-CAM heatmaps.
+The app uses the shared inference boundary and requires an approved local checkpoint at
+`models/densenet121_chestxray.pth`, or a path supplied through `MODEL_PATH`. It does not
+download weights or silently use random weights.
+
+### Step 7 - Launch the local API
+
+```bash
+uvicorn api.main:app --reload
+```
+
+Open `http://127.0.0.1:8000/docs` for the interactive API documentation. The API exposes
+`/health`, `/metadata`, and `POST /predict`; uploads are limited to readable PNG/JPEG files
+of 10 MB or less. Without a valid checkpoint, health and metadata remain available while
+`/predict` returns `503 Model checkpoint is unavailable`.
+
+Example request:
+
+```bash
+curl -X POST http://127.0.0.1:8000/predict \
+  -F "file=@path/to/chest-xray.png"
+```
+
+### Step 8 - Build the CPU API container
+
+```bash
+docker compose build
+docker compose up
+```
+
+The image build is independent of local NIH data and weights. Mount an approved checkpoint
+under `models/` before using `/predict`; the compose service deliberately does not download
+or publish model artifacts.
 
 ---
 
@@ -220,17 +257,11 @@ The model in this repository was trained on Kaggle with free T4 GPU. To reproduc
 
 ---
 
-## Streamlit Cloud Deployment (Free)
+## External deployment boundary
 
-Deploy the web app publicly in 5 minutes:
-
-1. **Fork or push** this repository to your GitHub account
-2. Go to [share.streamlit.io](https://share.streamlit.io) → Sign in with GitHub
-3. Click **New app**
-4. Select your repository → Branch: `main` → Main file: `app.py`
-5. Click **Deploy**
-
-> **Note:** The deployed app needs the trained model file (`models/densenet121_chestxray.pth`). Upload it to the repo using Git LFS or host it separately and load via URL. Without the model it will run with random weights and show a warning.
+No public Space, hosted API, model registry upload, or model-card URL is claimed by this
+repository. Those are separate release actions requiring an approved public artifact and
+explicit verification. Keep clinical data, credentials, and model weights outside Git.
 
 ---
 

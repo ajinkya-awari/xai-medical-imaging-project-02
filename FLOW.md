@@ -15,12 +15,12 @@ This describes the intended execution path and is updated only when the real cod
 
 1. `src/train.py` reads `src.config.CFG`, initializes one W&B run, runs the existing warm-up/fine-tune loops, logs only verified scalar metrics in each loop, and finishes the run on success or failure.
 
-## Planned path (Day 6-7, not implemented)
+## Current serving path (Day 6-7)
 
 1. `src/inference.py` owns checkpoint resolution, `checkpoint["model_state_dict"]` loading, preprocessing, probabilities, Grad-CAM, and PNG encoding.
-2. `api/main.py` loads the model once in FastAPI lifespan, validates PNG/JPEG uploads, calls the shared inference helpers, and returns the 14-label safety-aware response.
-3. Docker starts `uvicorn api.main:app`; weights resolve from the public Hugging Face model artifact and cache locally.
-4. `app.py` reuses the same inference boundary while retaining Streamlit as the Space entrypoint.
+2. `api/main.py` attempts one model load in FastAPI lifespan, validates PNG/JPEG uploads, calls the shared inference helpers, and returns the 14-label safety-aware response.
+3. Docker starts `uvicorn api.main:app`; the approved checkpoint is supplied through the ignored `models/` mount or `MODEL_PATH`.
+4. `app.py` reuses the same inference boundary for local Streamlit use; no public Space or Hugging Face artifact is claimed.
 
 ## Change-tracing rule
 
