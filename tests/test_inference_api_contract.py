@@ -65,6 +65,23 @@ def test_predict_rejects_non_image_upload_before_model_access():
     assert "PNG or JPEG" in response.json()["detail"]
 
 
+def test_predict_rejects_uploads_over_10_mb():
+    with TestClient(app) as client:
+        response = client.post(
+            "/predict",
+            files={
+                "file": (
+                    "large.png",
+                    b"0" * (10 * 1024 * 1024 + 1),
+                    "image/png",
+                )
+            },
+        )
+
+    assert response.status_code == 400
+    assert "10 MB" in response.json()["detail"]
+
+
 def test_predict_returns_structured_result_for_a_fake_model(monkeypatch):
     expected_overlay = base64.b64encode(b"overlay").decode("ascii")
     fake_result = {

@@ -70,7 +70,7 @@ def main():
         image = Image.open(uploaded).convert("RGB")
         model = load_model()
         probabilities = predict_probabilities(model, image)
-    except (OSError, RuntimeError, ValueError, FileNotFoundError) as exc:
+    except (AttributeError, ImportError, OSError, RuntimeError, ValueError, FileNotFoundError) as exc:
         st.error(f"The model is not ready: {exc}")
         st.info("Set MODEL_PATH or place the approved checkpoint under models/.")
         return

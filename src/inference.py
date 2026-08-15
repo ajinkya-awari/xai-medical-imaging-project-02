@@ -102,7 +102,6 @@ def png_base64(image_np):
 
 def generate_gradcam_overlay(model, image, class_idx, device=None, alpha=0.4):
     """Generate one class-specific RGB Grad-CAM overlay and clean up hooks."""
-    target_device = torch.device(device or next(model.parameters()).device)
     input_tensor = preprocess_image(image)
 
     from src.gradcam import GradCAM, apply_gradcam_overlay
