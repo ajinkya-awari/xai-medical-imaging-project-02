@@ -1,6 +1,6 @@
 # HANDOVER — XAI Medical Imaging / Project 01
 
-**Status:** Day 5 W&B tracking is implemented and online-authenticated; shared inference/API/Streamlit work is implemented; real NIH smoke and Docker runtime verification remain open.
+**Status:** Day 5 W&B tracking is implemented and online-authenticated; shared inference/API/Streamlit work and real checkpoint inference are verified in `.venv`; NIH smoke and Docker runtime verification remain open.
 **Last reviewed:** 2026-08-15
 **AI/model:** Codex (GPT-5), takeover and Day 6-7 implementation pass after Claude session limit
 
@@ -19,7 +19,7 @@ The Day 5 commit was created after complete diff review and verification. A late
 
 ## Blockers and next action
 
-Online W&B authentication is verified, but the real one-epoch/256-sample NIH smoke remains open because the local dataset is absent (`CSV present: False`, `PNG count: 0`). Day 6 code is implemented; Docker is unavailable locally and real checkpoint inference is blocked by the local torch/torchvision mismatch. Do not claim either gate as passed.
+Online W&B authentication is verified, but the real one-epoch/256-sample NIH smoke remains open because the local dataset is absent (`CSV present: False`, `PNG count: 0`). Real checkpoint inference and the FastAPI synthetic-image path now pass in the isolated `.venv`; Docker is still unavailable locally. Do not claim the NIH or Docker gates as passed.
 
 ## Five-line session handoff
 
@@ -27,6 +27,6 @@ Online W&B authentication is verified, but the real one-epoch/256-sample NIH smo
 2. Done: focused contract tests, offline fixture run, and failure-path finish check (2026-08-14).
 3. Done: online W&B authentication verified and a connectivity run synced to the live dashboard (2026-08-15).
 4. Watch: `.env`, W&B/HF credentials, model weights, NIH data, and `__results___files/`.
-5. Next: choose an approved NIH smoke-data path, repair the torch/torchvision environment, then run real inference and Docker verification; do not publish externally.
+5. Next: choose an approved NIH smoke-data path and install Docker Desktop if needed; then run the real smoke and Docker checks; do not publish externally.
 
 **Update rule:** Replace the five-line handoff at the end of every session; do not turn this into a transcript.

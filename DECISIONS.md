@@ -55,7 +55,7 @@ This is a concise decision ledger, not a chat transcript. Add one entry for ever
 - **Decision:** Put checkpoint loading, preprocessing, sigmoid probabilities, Grad-CAM cleanup, and PNG encoding in `src/inference.py`; have FastAPI and Streamlit use it. Never fall back to random weights; keep health and metadata available when a checkpoint is missing or incompatible.
 - **Alternatives:** duplicate inference code in each UI; auto-download weights; silently serve random predictions.
 - **Why:** One boundary prevents label/preprocessing drift, while fail-closed prediction avoids presenting untrained outputs as medical results and keeps diagnostics available.
-- **Verification:** `10 passed` focused/API and W&B contract tests; `git diff --check` and Python compilation passed. Real checkpoint loading remains blocked by the documented local torch/torchvision mismatch.
+- **Verification:** `10 passed` focused/API and W&B contract tests; the isolated `.venv` loaded the existing checkpoint and returned a real synthetic FastAPI prediction with 14 labels and Grad-CAM; global interpreter mismatch remains documented.
 
 ## Entry template
 

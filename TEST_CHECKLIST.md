@@ -49,6 +49,7 @@ No `.env`, credentials, NIH data, model weights, or `__results___files/` changes
 - [x] TestClient checks `/health` and `/metadata` return 200 with the disclaimer and 14-label metadata.
 - [x] Contract checks reject non-image and over-10MB uploads with 400; fake-model contract checks the all-label/top-prediction/confidence/base64 response shape.
 - [x] API lifespan attempts one local checkpoint load per process and requires nested `model_state_dict`; no random-weight fallback exists.
+- [x] Isolated `.venv` with `torch==2.12.1+cpu` and `torchvision==0.27.1+cpu` loaded the existing checkpoint; real FastAPI synthetic PNG check returned `200`, `model_loaded=True`, 14 labels, and a Grad-CAM payload.
 - [ ] `docker compose build` and `docker compose up` succeed from a clean clone without local weights.
 
 ### Day 6 verification record - 2026-08-15
@@ -56,7 +57,7 @@ No `.env`, credentials, NIH data, model weights, or `__results___files/` changes
 - `python -m pytest -q tests/test_inference_api_contract.py tests/test_day5_wandb_contract.py` -> `10 passed`.
 - `python -m py_compile src/inference.py api/main.py app.py` -> passed; `git diff --check` -> passed.
 - Docker verification -> not run: `docker` and `docker compose` are not installed in this environment.
-- Real model inference -> blocked by the local `torch 2.13.0` / `torchvision 0.25.0+cpu` native mismatch (`torchvision::nms`/DLL load failure); no claim of checkpoint inference is made.
+- Global Python still has `torch 2.13.0` / `torchvision 0.25.0+cpu` native mismatch; the isolated project `.venv` resolves it with the matched CPU pair above.
 
 ## Day 7 - Streamlit/Space gate
 

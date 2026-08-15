@@ -24,7 +24,7 @@ The current implementation includes Day 5 W&B tracking and the local shared infe
 - **Tests and expected output:** Focused inference/API plus Day 5 contract tests pass; Docker build/up remains unverified because Docker is unavailable locally.
 - **Implementation result:** Implemented and committed as `bfee9ad`; Streamlit now uses the same inference boundary and no longer downloads weights automatically.
 - **Diff review and commit:** Complete staged diff reviewed; no weights, data, credentials, or `__results___files/` were staged.
-- **Handoff:** Repair the torch/torchvision environment before real checkpoint inference; then run the approved NIH smoke and live endpoint test.
+- **Handoff:** Activate the verified `.venv`; then run the approved NIH smoke and Docker checks when their user-side prerequisites are available.
 
 ## Feature record template
 

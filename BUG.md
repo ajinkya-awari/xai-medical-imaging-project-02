@@ -43,5 +43,6 @@ Known planning hazards are recorded in `tasks/lessons.md` and `FINAL_VULNERABILI
 - **Observed:** Contract tests pass, but loading the pre-existing checkpoint imports `torchvision` and fails with `RuntimeError: operator torchvision::nms does not exist` / a Windows native DLL load failure.
 - **Evidence:** Environment reports `torch 2.13.0` and `torchvision 0.25.0+cpu`; `python -c "import torchvision"` reproduces the failure.
 - **Impact:** Health/metadata are intentionally resilient; real model inference and the NIH smoke run are not claimed.
-- **Next action:** Repair the environment with a compatible, supported torch/torchvision pair in a separate environment, then verify checkpoint loading before running any real data.
+- **Resolution:** The global environment remains mismatched, but an isolated project `.venv` with `torch==2.12.1+cpu` and `torchvision==0.27.1+cpu` now imports successfully, loads the existing checkpoint, and passes a real synthetic FastAPI prediction.
+- **Next action:** Use the isolated `.venv`; do not run the application from the mismatched global interpreter.
 - **Scope:** No source repository, credentials, data, weights, or external artifact was changed to work around this issue.

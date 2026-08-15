@@ -152,25 +152,25 @@ git clone https://github.com/ajinkya-awari/xai-medical-imaging.git
 cd xai-medical-imaging
 ```
 
-### Step 2 — Install PyTorch
+### Step 2 — Create the project environment and install PyTorch
 
 Pick one based on your hardware:
 
 ```bash
-# CPU only (slower but works everywhere):
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+# Windows PowerShell, CPU reference environment:
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install torch==2.12.1 torchvision==0.27.1 --index-url https://download.pytorch.org/whl/cpu
 
-# CUDA 11.8 (if you have an NVIDIA GPU):
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
-
-# CUDA 12.1:
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# If using CUDA, select a matched pair from the official PyTorch installer instead.
 ```
 
 ### Step 3 — Install Remaining Dependencies
 
 ```bash
 pip install -r requirements.txt
+pip install pytest httpx2
 ```
 
 ### Step 4 — Download the NIH Dataset
