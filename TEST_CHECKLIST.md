@@ -14,7 +14,7 @@ This is the concrete done gate. Commands run from `E:\Projects\xai-medical-imagi
 
 - [x] `python -m pytest -q` — `10 passed in 5.52s` (2026-08-15, .venv activated, all inference/API/W&B contract tests pass).
 - [x] `rg -n "from src\\.config|import config|from config" src/train.py` recorded the verified `from src.config import CFG` import.
-- [ ] A one-epoch/256-sample NIH smoke run logged the required metrics (not run: no local NIH fixture and no approved data path).
+- [x] A one-epoch/256-sample NIH smoke run logged the required metrics — W&B run `zu1zp34y` (2026-08-16, Kaggle CUDA, 256 samples, warmup epoch only).
 - [x] `WANDB_MODE=offline` was used for a secret-free one-epoch fixture; the later live check used a session-only approved key.
 - [x] `wandb.finish()` executed on success and failure paths (offline run plus loader-failure fixture).
 - [x] `.gitignore` already contained `.env`, `.env.*`, and `!.env.example` at baseline; `.env.example` was added with blank placeholders.
@@ -29,14 +29,15 @@ Observed failure path: `FAILURE_PATH_EVENTS=['init', 'finish']`.
 
 No `.env`, credentials, NIH data, model weights, or `__results___files/` changes were made.
 
-### Current Day 5 blocker - 2026-08-15
+### Day 5 NIH smoke verification - 2026-08-16 ✅ GATE CLOSED
 
-- Local data check: `CSV present: False`; `train_val_list.txt: False`; `test_list.txt: False`; `images/ dir: False`; `PNG count: 0`.
-- Online W&B check: completed; authenticated user `ajinkya18072001` and connectivity run `qwqgfql2` synced successfully.
-- Safe stop: no data download, `.env` creation, credential commit, model training, or model artifact upload was performed.
-- Approved smoke path: **Kaggle notebook** — `smoke_train.py` added to repo (256 samples, 1 epoch, warmup only). NIH dataset is pre-mounted on Kaggle; W&B key goes into Kaggle Secrets. See README "Training on Kaggle" and `smoke_train.py` docstring for exact steps.
-- Resume condition: open a new Kaggle notebook, follow the steps in `smoke_train.py`, run the bounded smoke, copy the W&B run URL, and record it in the box below. Do not treat the connectivity check as a training run.
-- [ ] NIH smoke W&B run URL: _____________________________________________
+- **Platform:** Kaggle notebook, CUDA (T4), NIH dataset pre-mounted, W&B key loaded via Kaggle Secrets only — never written to a file, command line, or chat.
+- **Scope:** `smoke_train.py` — 256 samples total, 1 warmup epoch, `smoke_densenet121_chestxray.pth` output (production checkpoint not touched).
+- **W&B run URL:** `https://wandb.ai/ajinkya18072001-university-college-london-ucl-/xai-medical-imaging/runs/zu1zp34y`
+- **Metrics logged (from W&B dashboard):** `train_auc=0.55288`, `val_auc=0.55271`, `train_loss` and `val_loss` present, `epoch=1`, `phase=warmup`, `lr` recorded.
+- **All required W&B keys confirmed present:** `epoch`, `lr`, `phase`, `train_loss`, `train_auc`, `val_loss`, `val_auc`.
+- **Discrepancy to document honestly:** The script printed `Best val AUC=0.0000` at the end. This is a known scoping issue in `smoke_train.py`: the `best_auc` variable is updated only inside the finetune loop (`range(WARMUP_EPOCHS + 1, NUM_EPOCHS + 1)`), which is skipped when `NUM_EPOCHS=1` and `WARMUP_EPOCHS=1`. The warmup loop does not update `best_auc`, so the terminal print is misleading. W&B correctly received `val_auc=0.55271` via `wandb.log()` inside the warmup loop. The metric logging is correct; the terminal summary is not. This is a display-only issue in the smoke override and does not affect `src/train.py` production behaviour.
+- **No NIH data, credentials, model weights, or `.env` were committed or uploaded to GitHub.**
 
 ### Day 5 online authentication verification - 2026-08-15
 
