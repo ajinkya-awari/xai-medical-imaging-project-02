@@ -7,6 +7,13 @@
 #
 # Then install the rest:
 #   pip install -r requirements.txt
+#
+# Hugging Face Spaces builds this file directly, so keep the CPU wheel index
+# here as well as in the Dockerfile's dedicated PyTorch installation layer.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+torch==2.12.1+cpu
+torchvision==0.27.1+cpu
 
 numpy>=1.24.0
 pandas>=2.0.0
@@ -18,6 +25,7 @@ streamlit>=1.28.0
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 python-multipart>=0.0.9
+huggingface_hub>=0.23.0
 tqdm>=4.65.0
 gdown
 wandb

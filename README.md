@@ -1,3 +1,13 @@
+---
+title: ChestXplain - Explainable Chest X-ray AI
+emoji: 🩻
+colorFrom: blue
+colorTo: indigo
+sdk: streamlit
+app_file: app.py
+pinned: false
+---
+
 # ChestXplain: Explainable AI for Chest X-ray Disease Classification
 
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
