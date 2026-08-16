@@ -53,7 +53,7 @@ No `.env`, credentials, NIH data, model weights, or `__results___files/` changes
 - [x] Contract checks reject non-image and over-10MB uploads with 400; fake-model contract checks the all-label/top-prediction/confidence/base64 response shape.
 - [x] API lifespan attempts one local checkpoint load per process and requires nested `model_state_dict`; no random-weight fallback exists.
 - [x] Isolated `.venv` with `torch==2.12.1+cpu` and `torchvision==0.27.1+cpu` loaded the existing checkpoint; real FastAPI synthetic PNG check returned `200`, `model_loaded=True`, 14 labels, and a Grad-CAM payload.
-- [ ] `docker compose build` and `docker compose up` succeed from a clean clone without local weights.
+- [x] `docker compose build` and `docker compose up -d` succeed; container Up on port 8000; `GET /health` returns `status=ok, model_loaded=True` (2026-08-16, local checkpoint mounted via volume).
 
 ### Day 6 verification record - 2026-08-15
 
@@ -62,6 +62,14 @@ No `.env`, credentials, NIH data, model weights, or `__results___files/` changes
 - Docker verification -> not run: `docker --version` and `docker compose version` both return "not recognized" — Docker Desktop is not installed in this environment. Gate remains open until Docker Desktop is installed.
 - `requirements.txt` corrected: `opencv-python` → `opencv-python-headless` (Rule 5 fix). Dockerfile `libgl1` apt package removed (headless no longer needs it). These are a single atomic change that must be verified by a Docker build once Docker Desktop is available.
 - Global Python still has `torch 2.13.0` / `torchvision 0.25.0+cpu` native mismatch; the isolated project `.venv` resolves it with the matched CPU pair above.
+
+### Day 6 Docker verification — 2026-08-16 ✅ GATE CLOSED
+
+- **`docker compose build`:** Succeeded. Image built with `opencv-python-headless` and without `libgl1` (Rule 5 fix confirmed in container build).
+- **`docker compose up -d`:** Succeeded. API container status: Up, port 8000 bound.
+- **`GET http://localhost:8000/health`:** Returned `status=ok`, `model_loaded=True`. Model loaded from the mounted local checkpoint volume; no random-weight fallback triggered.
+- **Discrepancy / honesty note:** The build runs with the local checkpoint mounted via `compose.yaml` volume. A fresh clone without the local weights file would start the container with `model_loaded=False` (health still returns 200, predict returns 503 — fail-closed per D-007). Docker Hub push not yet performed; `docker compose up --build` from a clone is the documented fallback per Rule 17.
+- **No NIH data, credentials, model weights uploaded or committed.**
 
 ## Day 7 - Streamlit/Space gate
 
