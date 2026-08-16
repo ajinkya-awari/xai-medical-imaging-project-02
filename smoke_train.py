@@ -31,15 +31,15 @@ Step 4: In the first notebook cell, load the secret and clone the repo:
     os.environ["WANDB_API_KEY"] = UserSecretsClient().get_secret("WANDB_API_KEY")
 
     # Clone and install
-    !git clone https://github.com/ajinkya-awari/xai-medical-imaging.git
-    %cd xai-medical-imaging
+    !git clone https://github.com/ajinkya-awari/t1-mlops-stack.git
+    %cd t1-mlops-stack
     !pip install -q -r requirements.txt
 
 Step 5: In the next cell, run the smoke:
 
     !python smoke_train.py
 
-Step 6: Copy the W&B run URL from the output and record it in TEST_CHECKLIST.md.
+Step 6: Copy the W&B run URL from the output and retain it with the experiment record.
 
 Run locally (once data/Data_Entry_2017.csv and data/images/ are present)
 ------------------------------------------------------------------------
@@ -55,7 +55,7 @@ Rules
 - Do not increase MAX_SAMPLES or NUM_EPOCHS without explicit user approval.
 - Do not commit WANDB_API_KEY to any file.
 - Do not replace the production checkpoint with the smoke checkpoint.
-- Record the W&B run URL and exact command output in TEST_CHECKLIST.md.
+- Record the W&B run URL and exact command output with the experiment evidence.
 """
 
 import os
@@ -97,5 +97,5 @@ if __name__ == "__main__":
 
     print("=" * 60)
     print(f"Smoke complete. Best val AUC = {best_auc:.4f}")
-    print("Record the W&B run URL in TEST_CHECKLIST.md under 'Day 5 NIH smoke'.")
+    print("Record the W&B run URL with the experiment evidence.")
     print("=" * 60)

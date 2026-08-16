@@ -20,8 +20,8 @@ This describes the intended execution path and is updated only when the real cod
 1. `src/inference.py` owns checkpoint resolution, `checkpoint["model_state_dict"]` loading, preprocessing, probabilities, Grad-CAM, and PNG encoding.
 2. `api/main.py` attempts one model load in FastAPI lifespan, validates PNG/JPEG uploads, calls the shared inference helpers, and returns the 14-label safety-aware response.
 3. Docker starts `uvicorn api.main:app`; the approved checkpoint is supplied through the ignored `models/` mount or `MODEL_PATH`.
-4. `app.py` reuses the same inference boundary for local Streamlit use; no public Space or Hugging Face artifact is claimed.
+4. `app.py` reuses the same inference boundary for local Streamlit use.
 
 ## Change-tracing rule
 
-For every implementation change, update the affected arrow(s), name the exact files/functions, and add a regression test or smoke command to `TEST_CHECKLIST.md`.
+For every implementation change, update the affected arrow(s), name the exact files/functions, and add a regression test or smoke command to the project evidence.

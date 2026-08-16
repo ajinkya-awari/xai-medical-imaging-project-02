@@ -107,7 +107,7 @@ Training used a **20,000-image subset** using the official train/test split file
 ## Repository Structure
 
 ```
-xai-medical-imaging/
+t1-mlops-stack/
 ├── src/
 │   ├── config.py          # Hyperparameters, paths, disease labels
 │   ├── dataset.py         # Data loading, transforms, train/val/test split
@@ -148,8 +148,8 @@ xai-medical-imaging/
 ### Step 1 — Clone the Repository
 
 ```bash
-git clone https://github.com/ajinkya-awari/xai-medical-imaging.git
-cd xai-medical-imaging
+git clone https://github.com/ajinkya-awari/t1-mlops-stack.git
+cd t1-mlops-stack
 ```
 
 ### Step 2 — Create the project environment and install PyTorch
@@ -258,8 +258,8 @@ The model in this repository was trained on Kaggle with free T4 GPU. To reproduc
    from kaggle_secrets import UserSecretsClient
    import os
    os.environ["WANDB_API_KEY"] = UserSecretsClient().get_secret("WANDB_API_KEY")
-   !git clone https://github.com/ajinkya-awari/xai-medical-imaging.git
-   %cd xai-medical-imaging
+   !git clone https://github.com/ajinkya-awari/t1-mlops-stack.git
+   %cd t1-mlops-stack
    !pip install -q -r requirements.txt
    ```
 6. For the bounded smoke run (256 samples, 1 epoch — closes the Day 5 gate):
@@ -296,7 +296,6 @@ explicit verification. Keep clinical data, credentials, and model weights outsid
 2. Selvaraju, R. R., Cogswell, M., Das, A., Vedantam, R., Parikh, D., & Batra, D. (2017). Grad-CAM: Visual explanations from deep networks via gradient-based localization. *ICCV*.
 3. Wang, X., Peng, Y., Lu, L., Lu, Z., Bagheri, M., & Summers, R. M. (2017). ChestX-ray8: Hospital-scale chest X-ray database and benchmarks. *CVPR*.
 4. Rajpurkar, P., Irvin, J., Zhu, K., et al. (2017). CheXNet: Radiologist-level pneumonia detection on chest X-rays with deep learning. *arXiv:1711.05225*.
-5. Awari, A. et al. (2023). Plant Disease Detection Using Machine Learning. *IJARSCT*, Volume 3, Issue 2. DOI: 10.48175/IJARSCT-9156
 
 ---
 
@@ -307,7 +306,7 @@ explicit verification. Keep clinical data, credentials, and model weights outsid
   author    = {Awari, Ajinkya},
   title     = {ChestXplain: Explainable AI for Chest X-ray Disease Classification},
   year      = {2026},
-  url       = {https://github.com/ajinkya-awari/xai-medical-imaging},
+  url       = {https://github.com/ajinkya-awari/t1-mlops-stack},
   license   = {MIT}
 }
 ```

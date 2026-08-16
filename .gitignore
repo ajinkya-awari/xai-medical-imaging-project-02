@@ -8,7 +8,7 @@ dist/
 build/
 .eggs/
 
-# Local Claude Code control plane — never publish agent instructions or memory
+# Local agent control files — never publish instructions or memory
 .claude/
 
 # Virtual envs
