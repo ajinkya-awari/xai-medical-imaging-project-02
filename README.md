@@ -37,7 +37,6 @@ This project adds those three layers and produces four verifiable public artifac
 | W&B smoke run | Live | Run `zu1zp34y`, 256 samples, 1 epoch — train\_auc=0.553, val\_auc=0.553 |
 | HF model repo | Live | [ajinkya1807/t1-mlops-stack-model](https://huggingface.co/ajinkya1807/t1-mlops-stack-model) |
 | Docker CPU API | Verified locally | `docker compose up --build`, /health 200; no Docker Hub image published |
-| HF Space | Not created | Source is ready; Space has not been deployed yet |
 
 ---
 
@@ -106,7 +105,7 @@ densenet121_chestxray.pth ──► HF model repo ajinkya1807/t1-mlops-stack-mod
         |          |
         |          ├──► api/main.py -> Docker CPU container (localhost:8000)
         |          |
-        |          └──► app.py -> Streamlit -> HF Space (not yet created)
+        |          └──► app.py -> Streamlit (local demo)
         |
         └──► model card README.md (renders on HF)
 ```
@@ -218,7 +217,7 @@ Or set `MODEL_PATH` to a path inside the container.
 
 ---
 
-## 5. Streamlit app / HF Space
+## 5. Streamlit app
 
 ### Run locally
 
@@ -235,7 +234,6 @@ predictions to keep CPU inference under a few seconds.
 A research-only warning appears before and after each inference. Do not upload patient-identifiable
 or restricted clinical images.
 
-The HF Space has not been created yet. The source runs locally without changes.
 
 ---
 
@@ -246,7 +244,6 @@ The HF Space has not been created yet. The source runs locally without changes.
 | W&B tracking | Closed | Run `zu1zp34y`, train_auc=0.553, val_auc=0.553 |
 | Docker build + /health | Closed | `compose build + up`, /health 200 |
 | HF model repository | Closed | [commit efa149c](https://huggingface.co/ajinkya1807/t1-mlops-stack-model/commit/efa149c) |
-| HF Space | Pending | Source prepared; Space not yet deployed |
 
 ---
 
@@ -356,13 +353,13 @@ t1-mlops-stack/
 │   ├── test_day5_wandb_contract.py
 │   └── test_inference_api_contract.py
 ├── outputs/             # Evaluation figures and test results
-├── app.py               # Streamlit app (HF Space entrypoint)
+├── app.py               # Streamlit app
 ├── smoke_train.py       # 256-sample smoke for W&B gate
 ├── run_all.py           # Train, evaluate, visualise
 ├── Dockerfile
 ├── compose.yaml
 ├── requirements.txt
-├── packages.txt         # System packages for HF Space build
+├── packages.txt         # System packages for Streamlit build
 └── README.md
 ```
 
