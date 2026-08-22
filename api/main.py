@@ -1,4 +1,4 @@
-"""FastAPI serving surface with explicit upload and model safety boundaries."""
+"""FastAPI inference API for the ChestXplain chest X-ray classifier."""
 
 from contextlib import asynccontextmanager
 import io

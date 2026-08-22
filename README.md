@@ -1,5 +1,5 @@
 ---
-title: T1 MLOps Stack — ChestXplain
+title: T1 MLOps Stack
 emoji: 🩻
 colorFrom: blue
 colorTo: indigo
@@ -19,148 +19,146 @@ pinned: false
 ![HF Model](https://img.shields.io/badge/HF%20Model-ajinkya1807%2Ft1--mlops--stack--model-yellow?logo=huggingface)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-**MLOps serving and verification stack built on top of ChestXplain — an explainable chest X-ray classifier.**
+Experiment tracking, a Docker-hosted inference API, and Streamlit serving for
+[ChestXplain](https://github.com/ajinkya-awari/t1-mlops-stack), a DenseNet121 chest X-ray
+classifier trained on NIH ChestX-ray14.
 
-A trained model with no production signal is a research artifact, not an engineering asset.
-This project adds three production layers to ChestXplain in three days:
-W&B experiment tracking, a Docker-hosted FastAPI inference API, and a Hugging Face Space demo
-(source-prepared; Space not yet created) — producing verifiable public artifacts that demonstrate
-end-to-end ML operationalisation.
+ChestXplain trains to 0.769 mean AUC across 14 pathologies but had no way to track experiment
+metrics, serve predictions through an API, or run reproducibly outside the training notebook.
+This project adds those three layers and produces four verifiable public artifacts in the process.
 
 ---
 
-## Public Artifacts
+## Artifacts
 
 | Artifact | Status | Link / Evidence |
 |---|---|---|
-| GitHub repository | ✅ Live | [ajinkya-awari/t1-mlops-stack](https://github.com/ajinkya-awari/t1-mlops-stack) |
-| W&B smoke run | ✅ Live | Run `zu1zp34y` — train_auc=0.553, val_auc=0.553 (256 samples, 1 epoch) |
-| HF model repository | ✅ Live | [ajinkya1807/t1-mlops-stack-model](https://huggingface.co/ajinkya1807/t1-mlops-stack-model) |
-| Docker CPU API | ✅ Verified locally | `docker compose up --build` — `/health` 200; no Docker Hub image published |
-| HF Space (Streamlit) | ❌ Not created | Source prepared; Space has not been created yet |
+| GitHub | Live | [ajinkya-awari/t1-mlops-stack](https://github.com/ajinkya-awari/t1-mlops-stack) |
+| W&B smoke run | Live | Run `zu1zp34y`, 256 samples, 1 epoch — train\_auc=0.553, val\_auc=0.553 |
+| HF model repo | Live | [ajinkya1807/t1-mlops-stack-model](https://huggingface.co/ajinkya1807/t1-mlops-stack-model) |
+| Docker CPU API | Verified locally | `docker compose up --build`, /health 200; no Docker Hub image published |
+| HF Space | Not created | Source is ready; Space has not been deployed yet |
 
 ---
 
-## What This Project Adds
+## What was added
 
-ChestXplain already trains to a mean test AUC of 0.769 across 14 chest pathologies
-(full 20K-image training run, Kaggle T4 GPU). What it lacked was any production signal:
-no tracked experiment metrics, no reproducible inference API, and no public interactive demo.
+### W&B tracking
 
-**T1 MLOps Stack** introduces:
+`src/train.py` logs loss, AUC, and learning rate each epoch in both the warmup and finetune
+phases. Run `smoke_train.py` on Kaggle to verify the hooks work without pulling the full NIH
+dataset locally. Smoke run `zu1zp34y` confirms it: `train_auc=0.55288`, `val_auc=0.55271`
+on 256 samples. That number is not the model's real AUC; it just proves the tracking fires.
 
-- **W&B experiment tracking** — scalar metrics (loss, AUC, learning rate) logged per epoch in both
-  the warm-up and fine-tune phases of the two-phase training loop; reproducible from Kaggle with
-  a single smoke command. Smoke gate verified: run `zu1zp34y`, train_auc=0.553, val_auc=0.553
-  (256 samples, 1 epoch, tracking infrastructure confirmed).
-- **Shared inference boundary** (`src/inference.py`) — a single module that owns checkpoint
-  resolution, `model_state_dict` loading, preprocessing, probability computation, Grad-CAM
-  generation, and PNG encoding. Both FastAPI and Streamlit call the same functions; there is no
-  duplicated model logic.
-- **FastAPI inference API** — `/health`, `/metadata`, and `POST /predict` endpoints; the model
-  loads once at startup via FastAPI's `lifespan`; all 14 label probabilities are returned per
-  request; non-image and oversized uploads are rejected with typed errors.
-- **Docker deployment** — a reproducible CPU API container built from `python:3.11-slim`; the
-  image installs CPU PyTorch before the remaining dependencies and does not bundle NIH data or
-  model weights; verified locally via `docker compose up --build`.
-- **Hugging Face model repository** — the approved DenseNet121 checkpoint (28.5 MB, SHA-256
-  verified) is published to `ajinkya1807/t1-mlops-stack-model` under MIT license; the model
-  card documents training conditions, AUC results, and the research-only disclaimer.
-- **HF Space (Streamlit)** — source-prepared for CPU deployment; the app falls back to the public
-  HF model checkpoint when no local weights are available, enforces a 10 MB / 20 Mpx upload cap,
-  and limits Grad-CAM rendering to four classes to keep CPU inference responsive.
+### Shared inference module
 
----
+`src/inference.py` is the single place that handles checkpoint loading, image preprocessing,
+sigmoid probabilities, Grad-CAM generation, and response encoding. Both `api/main.py` and
+`app.py` import from it. There is no duplicated model logic between the two serving paths.
 
-## About ChestXplain (the application being operationalised)
+### FastAPI endpoint
 
-ChestXplain is the underlying XAI application this project wraps with production infrastructure.
-It is a DenseNet121 classifier with Grad-CAM explanations trained on the NIH ChestX-ray14 dataset.
+`api/main.py` exposes `/health`, `/metadata`, and `POST /predict`. The model loads once at
+FastAPI startup, not per request. Every prediction response includes all 14 label probabilities.
+Uploads that are not PNG/JPEG or exceed 10 MB are rejected before the model is touched.
 
-**Baseline results (ChestXplain full training — 20K images, 10 epochs, Kaggle T4 GPU):**
-Mean test AUC: **0.769** across 14 thoracic pathology labels.
-CheXNet benchmark (full 112K dataset): 0.841.
+### Docker container
 
-The model checkpoint published to the HF model repository (`densenet121_chestxray.pth`, 28.5 MB)
-is the approved ChestXplain baseline artifact. Architecture: DenseNet121 pretrained on ImageNet,
-AdaptiveAvgPool → Dropout(0.3) → Linear(1024, 14), sigmoid output.
-Explainability: Grad-CAM on the final dense block (`DenseBlock4`).
+A `python:3.11-slim` image with CPU-only PyTorch installed as a dedicated layer before the rest
+of the dependencies. No NIH data or model weights are baked in. The container expects the
+checkpoint mounted at `models/` or pointed to via `MODEL_PATH`.
 
-> ChestXplain references: Wang et al. (2017) NIH ChestX-ray14; Huang et al. (2017) DenseNet121;
-> Selvaraju et al. (2017) Grad-CAM; Rajpurkar et al. (2017) CheXNet.
+### HF model repository
+
+The 28.5 MB DenseNet121 checkpoint is published at `ajinkya1807/t1-mlops-stack-model`. The
+Streamlit app falls back to this when no local weights are found, pinned to commit `efa149c`
+for reproducibility.
 
 ---
 
-## System Architecture
+## About ChestXplain
+
+ChestXplain is the classifier this project serves. The architecture is DenseNet121 pretrained
+on ImageNet, fine-tuned on NIH ChestX-ray14 with a two-phase schedule: the backbone freezes
+during warmup, then the full network trains in the finetune phase. The output layer is 14
+independent sigmoid nodes, one per thoracic pathology. Grad-CAM targets the final dense block.
+
+Full training baseline (20K images, 10 epochs, Kaggle T4 GPU): mean test AUC 0.769.
+CheXNet on the full 112K dataset: 0.841.
+
+Training references: Wang et al. 2017 (NIH ChestX-ray14), Huang et al. 2017 (DenseNet),
+Selvaraju et al. 2017 (Grad-CAM), Rajpurkar et al. 2017 (CheXNet).
+
+---
+
+## Architecture
 
 ```text
-NIH ChestX-ray14 (local only — never uploaded)
-        │
-        ▼
-src/train.py ── scalar metrics ──► W&B run zu1zp34y (smoke: train_auc=0.553, val_auc=0.553)
-        │
-        ▼
+NIH ChestX-ray14 (local only, never uploaded)
+        |
+        v
+src/train.py ── scalar metrics ──► W&B run zu1zp34y  (smoke: train_auc=0.553, val_auc=0.553)
+        |
+        v
 densenet121_chestxray.pth ──► HF model repo ajinkya1807/t1-mlops-stack-model
-        │
-        ├──► src/inference.py ◄── shared boundary (one preprocessing + Grad-CAM path)
-        │          │
-        │          ├──► api/main.py → Docker CPU container (localhost:8000)
-        │          │
-        │          └──► app.py → Streamlit → HF Space (not yet created)
-        │
+        |
+        ├──► src/inference.py ◄── shared module (preprocessing + Grad-CAM)
+        |          |
+        |          ├──► api/main.py -> Docker CPU container (localhost:8000)
+        |          |
+        |          └──► app.py -> Streamlit -> HF Space (not yet created)
+        |
         └──► model card README.md (renders on HF)
 ```
 
 ---
 
-## 1 · W&B Experiment Tracking
+## 1. W&B experiment tracking
 
-`src/train.py` initialises one W&B run per training session and logs the following scalars each
-epoch inside both the warm-up and fine-tune loops:
+`src/train.py` logs these scalars each epoch in both the warmup and finetune loops:
 
-| Metric | Variable | Description |
+| Metric | Variable | Notes |
 |---|---|---|
-| `train/loss` | `tr_loss` | Mean BCE loss over training batches |
-| `train/auc` | `tr_auc` | Mean AUC across 14 labels (train) |
-| `val/loss` | `va_loss` | Mean BCE loss over validation batches |
-| `val/auc` | `va_auc` | Mean AUC across 14 labels (validation) |
-| `learning_rate` | scheduler output | Current LR after ReduceLROnPlateau |
-| `epoch` | loop counter | 1-indexed epoch number |
+| `train/loss` | `tr_loss` | Mean BCE loss across training batches |
+| `train/auc` | `tr_auc` | Mean AUC across 14 labels |
+| `val/loss` | `va_loss` | Mean BCE loss across validation batches |
+| `val/auc` | `va_auc` | Mean AUC across 14 labels |
+| `learning_rate` | scheduler output | LR after ReduceLROnPlateau |
+| `epoch` | loop counter | 1-indexed |
 
-**Smoke gate (Day 5):** W&B run `zu1zp34y`, 256 samples, 1 epoch.
-Verified metrics: `train_auc=0.55288`, `val_auc=0.55271`.
-These confirm the tracking infrastructure works; they are not indicative of full-training AUC
-(which requires the full 20K-image ChestXplain training run).
+Smoke run `zu1zp34y`: 256 samples, 1 epoch. Verified: `train_auc=0.55288`, `val_auc=0.55271`.
+These confirm the tracking infrastructure works, not that the model has converged. Full training
+needs the complete 20K-image dataset.
 
 ---
 
-## 2 · Shared Inference Boundary
+## 2. Shared inference module
 
-`src/inference.py` is the single source of truth for all model-facing operations:
+`src/inference.py` handles everything between raw input and model output:
 
-| Function | Purpose |
+| Function | What it does |
 |---|---|
-| `get_model_path()` | Resolve checkpoint from `MODEL_PATH` env var, local default, or HF Hub |
-| `load_checkpoint_model()` | Load `checkpoint["model_state_dict"]`; never accept raw state dicts or random weights |
-| `preprocess_image()` | PIL → normalised (ImageNet stats) → batched tensor |
-| `predict_probabilities()` | Model forward pass → 14 independent sigmoid probabilities |
+| `get_model_path()` | Resolves checkpoint from `MODEL_PATH` env var, local default, or HF Hub |
+| `load_checkpoint_model()` | Loads `checkpoint["model_state_dict"]`; does not accept raw state dicts |
+| `preprocess_image()` | PIL image to normalised batched tensor (ImageNet mean/std) |
+| `predict_probabilities()` | Forward pass returning 14 sigmoid probabilities |
 | `generate_gradcam_overlay()` | Grad-CAM on `DenseBlock4`; hooks cleaned up after each call |
-| `probabilities_payload()` | Stable 14-label JSON payload for both API and Streamlit |
-| `run_inference()` | Convenience wrapper: probabilities + top-class Grad-CAM + base64 PNG |
+| `probabilities_payload()` | 14-label dict with top prediction and confidence score |
+| `run_inference()` | Probabilities + top-class Grad-CAM overlay + base64 PNG in one call |
 
-Both `api/main.py` and `app.py` call this module. Model logic is not duplicated.
+Both `api/main.py` and `app.py` call these functions directly.
 
 ---
 
-## 3 · FastAPI Inference API
+## 3. FastAPI inference endpoint
 
-### Endpoints
+### Routes
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/health` | Returns model status, load timestamp, and research disclaimer |
-| `GET` | `/metadata` | Returns label list, HF model repo URL, mean AUC, dataset, and disclaimer |
-| `POST` | `/predict` | Accepts PNG/JPEG ≤ 10 MB; returns all 14 label probabilities + Grad-CAM |
+| `GET` | `/health` | Model load status and research disclaimer |
+| `GET` | `/metadata` | Label list, HF model repo, mean AUC, dataset, disclaimer |
+| `POST` | `/predict` | PNG/JPEG up to 10 MB; returns all 14 probabilities + Grad-CAM |
 
 ### Response schema (`POST /predict`)
 
@@ -176,143 +174,130 @@ Both `api/main.py` and `app.py` call this module. Model logic is not duplicated.
 }
 ```
 
-### Example request
+### Example
 
 ```bash
 curl -X POST http://127.0.0.1:8000/predict \
-  -F "file=@path/to/chest-xray.png"
+  -F "file=@chest-xray.png"
 ```
 
-Interactive API docs: `http://127.0.0.1:8000/docs`
+API docs at `http://127.0.0.1:8000/docs`
 
-The model loads once at FastAPI startup via `lifespan`. Without a valid checkpoint, `/health` and
-`/metadata` return 200; `/predict` returns `503 Model checkpoint is unavailable`.
+Without a valid checkpoint, `/health` and `/metadata` return 200, but `/predict` returns 503.
 
-> **Research disclaimer**: this API is not approved for clinical or diagnostic use.
-> All responses include a `disclaimer` field. Do not use predictions as medical advice.
+> Not for clinical or diagnostic use. All responses include a `disclaimer` field.
 
 ---
 
-## 4 · Docker Deployment
+## 4. Docker
 
-### Build and run
+### Build and start
 
 ```bash
 docker compose up --build
 ```
 
-> No Docker Hub image has been published. Build locally from source.
+No Docker Hub image is published. Build from source.
 
 ### What the image contains
 
-- `python:3.11-slim` base
-- CPU-only PyTorch (`torch==2.12.1`, `torchvision==0.27.1`) installed in a dedicated layer
+- Base: `python:3.11-slim`
+- CPU PyTorch installed in a separate layer before `requirements.txt`
 - `opencv-python-headless` (no GUI libraries required in slim containers)
-- `src/`, `api/`, `app.py` — no NIH data, credentials, or model weights
+- `src/`, `api/`, `app.py` with no NIH data, no credentials, and no weights baked in
 
-### Supplying the checkpoint
-
-Mount the approved local checkpoint before starting:
+### Checkpoint
 
 ```bash
-# compose.yaml does this automatically:
+# compose.yaml handles this automatically:
 volumes:
   - ./models:/app/models:ro
 ```
 
-The `MODEL_PATH` environment variable can also point to an explicit path inside the container.
+Or set `MODEL_PATH` to a path inside the container.
 
 ---
 
-## 5 · HuggingFace Space (Streamlit)
+## 5. Streamlit app / HF Space
 
-### Local use
+### Run locally
 
 ```bash
 streamlit run app.py
 ```
 
-Open `http://localhost:8501`. The app loads the local checkpoint at
-`models/densenet121_chestxray.pth` if present, or downloads the approved public artifact from
-`ajinkya1807/t1-mlops-stack-model` (pinned commit `efa149c`) if no local weights are found.
+The app loads the local checkpoint at `models/densenet121_chestxray.pth` if present. If not,
+it downloads from `ajinkya1807/t1-mlops-stack-model` (pinned to commit `efa149c`).
 
-### Space constraints
+Upload limits: 10 MB encoded, 20 million pixels decoded. Grad-CAM is capped at the top 4
+predictions to keep CPU inference under a few seconds.
 
-- **Upload limit**: 10 MB encoded; 20 million pixels decoded.
-- **Grad-CAM cap**: top 4 predictions only (prevents 14 sequential backward passes on CPU).
-- **Disclaimer**: a research-only warning is shown before and after every inference.
+A research-only warning appears before and after each inference. Do not upload patient-identifiable
+or restricted clinical images.
 
-> The HF Space has not been created yet. The source is prepared and the app runs locally.
+The HF Space has not been created yet. The source runs locally without changes.
 
 ---
 
-## Verification Gates
+## Verification gates
 
 | Gate | Status | Evidence |
 |---|---|---|
-| W&B experiment tracking | ✅ CLOSED | Run `zu1zp34y`, train_auc=0.553, val_auc=0.553, Day 5 |
-| Docker build + `/health` 200 | ✅ CLOSED | `compose build + up`, Day 6 |
-| HF model repository | ✅ CLOSED | [commit efa149c](https://huggingface.co/ajinkya1807/t1-mlops-stack-model/commit/efa149c), Day 7 |
-| HF Space (Streamlit) | ❌ PENDING | Source prepared; Space not yet created |
+| W&B tracking | Closed | Run `zu1zp34y`, train_auc=0.553, val_auc=0.553 |
+| Docker build + /health | Closed | `compose build + up`, /health 200 |
+| HF model repository | Closed | [commit efa149c](https://huggingface.co/ajinkya1807/t1-mlops-stack-model/commit/efa149c) |
+| HF Space | Pending | Source prepared; Space not yet deployed |
 
 ---
 
-## Setup & Usage
+## Setup
 
 ### Prerequisites
 
-- Python 3.9 or newer
-- 8 GB RAM minimum (16 GB recommended for full training)
-- GPU optional but significantly speeds up training
-- Docker Desktop (for the container API path)
+Python 3.9 or newer. 8 GB RAM minimum (16 GB recommended for full training). Docker Desktop
+for the container API path.
 
-### Step 1 — Clone
+### Clone
 
 ```bash
 git clone https://github.com/ajinkya-awari/t1-mlops-stack.git
 cd t1-mlops-stack
 ```
 
-### Step 2 — Install CPU PyTorch first
+### Install
 
 ```bash
 python -m venv .venv
-# Windows PowerShell:
+
+# Windows
 .\.venv\Scripts\Activate.ps1
-# macOS / Linux:
+# macOS / Linux
 source .venv/bin/activate
 
 pip install --upgrade pip
 pip install torch==2.12.1 torchvision==0.27.1 --index-url https://download.pytorch.org/whl/cpu
-```
-
-For CUDA, substitute your matched pair from the [PyTorch installer](https://pytorch.org/get-started/locally/).
-
-### Step 3 — Install remaining dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-### Step 4 — Launch the Streamlit app
+For GPU, replace the PyTorch install with the appropriate CUDA pair from
+[pytorch.org](https://pytorch.org/get-started/locally/).
+
+### Run the Streamlit app
 
 ```bash
 streamlit run app.py
 ```
 
-The app downloads the approved checkpoint from the HF model repository on first launch if no
-local weights are present.
-
-### Step 5 — Launch the local API
+### Run the local API
 
 ```bash
 uvicorn api.main:app --reload
 ```
 
-The API requires a local checkpoint at `models/densenet121_chestxray.pth` or a path set via
-`MODEL_PATH`. Without one, `/predict` returns 503.
+Needs a checkpoint at `models/densenet121_chestxray.pth` or via `MODEL_PATH`. Without one,
+`/predict` returns 503.
 
-### Step 6 — Build the Docker API container
+### Build the Docker container
 
 ```bash
 docker compose up --build
@@ -320,13 +305,14 @@ docker compose up --build
 
 ---
 
-## Reproducing the W&B Smoke Run (Kaggle)
+## Reproducing the smoke run on Kaggle
 
-The approved smoke run uses 256 NIH images and 1 epoch — no local data download needed.
+The smoke run uses 256 NIH images and 1 epoch. No local data download needed.
 
-1. Go to [kaggle.com](https://kaggle.com) → New Notebook.
-2. Add dataset: **+ Add Data** → search `NIH Chest X-rays` (by `nih-chest-xrays`) → Add.
-3. Add W&B key: Notebook sidebar → **Secrets** → Add `WANDB_API_KEY` → toggle **Attach to notebook** ON.
+1. Open [kaggle.com](https://kaggle.com) and create a new notebook.
+2. Add dataset: **+ Add Data**, search `NIH Chest X-rays` (by `nih-chest-xrays`), add it.
+3. Add your W&B key: Notebook sidebar, **Secrets**, add `WANDB_API_KEY`, toggle
+   **Attach to notebook** on.
 4. In the first cell:
 
 ```python
@@ -345,42 +331,38 @@ os.environ["WANDB_API_KEY"] = UserSecretsClient().get_secret("WANDB_API_KEY")
 !python smoke_train.py
 ```
 
-Copy the W&B run URL from the output and retain it with the experiment record.
-Do not increase `MAX_SAMPLES` or `NUM_EPOCHS` without explicit approval.
+Do not increase `MAX_SAMPLES` or `NUM_EPOCHS` without a specific reason. The purpose of the
+smoke is to verify the tracking hooks, not to measure AUC.
 
 ---
 
-## Repository Structure
+## Repository layout
 
 ```
 t1-mlops-stack/
 ├── src/
-│   ├── config.py          # Hyperparameters, paths, disease labels
-│   ├── dataset.py         # Data loading, transforms, train/val/test split
-│   ├── model.py           # DenseNet121 architecture + freeze/unfreeze utilities
-│   ├── inference.py       # Shared: preprocessing, prediction, Grad-CAM, encoding
-│   ├── train.py           # Two-phase training loop with W&B logging + checkpointing
-│   ├── evaluate.py        # Test set evaluation, AUC computation, ROC curves
-│   ├── gradcam.py         # Grad-CAM implementation + overlay generation
-│   ├── visualize.py       # Sample Grad-CAM grid generation
+│   ├── config.py        # Hyperparameters, paths, disease labels
+│   ├── dataset.py       # Data loading, transforms, train/val/test split
+│   ├── model.py         # DenseNet121 with freeze/unfreeze utilities
+│   ├── inference.py     # Preprocessing, prediction, Grad-CAM, encoding
+│   ├── train.py         # Two-phase training loop with W&B logging
+│   ├── evaluate.py      # Test AUC computation and ROC curves
+│   ├── gradcam.py       # Grad-CAM implementation
+│   ├── visualize.py     # Grad-CAM sample grid
 │   └── __init__.py
 ├── api/
-│   └── main.py            # FastAPI: /health, /metadata, POST /predict
+│   └── main.py          # FastAPI: /health, /metadata, POST /predict
 ├── tests/
-│   ├── test_day5_wandb_contract.py   # W&B config contract
-│   └── test_inference_api_contract.py # API schema contract
-├── outputs/
-│   ├── auc_barplot.png    # Per-class AUC bar chart (ChestXplain baseline)
-│   ├── roc_curves.png     # ROC curves for all 14 diseases
-│   ├── gradcam_samples.png # Grad-CAM on real NIH X-rays
-│   └── test_results.json  # Full AUC numbers
-├── app.py                 # Streamlit web application (HF Space entrypoint)
-├── smoke_train.py         # 256-sample / 1-epoch W&B gate script
-├── run_all.py             # Master script: train → evaluate → visualise
-├── Dockerfile             # CPU API image (python:3.11-slim)
-├── compose.yaml           # Local API composition
-├── requirements.txt       # Dependencies (CPU PyTorch wheels pre-declared)
-├── packages.txt           # System packages for HF Space build
+│   ├── test_day5_wandb_contract.py
+│   └── test_inference_api_contract.py
+├── outputs/             # Evaluation figures and test results
+├── app.py               # Streamlit app (HF Space entrypoint)
+├── smoke_train.py       # 256-sample smoke for W&B gate
+├── run_all.py           # Train, evaluate, visualise
+├── Dockerfile
+├── compose.yaml
+├── requirements.txt
+├── packages.txt         # System packages for HF Space build
 └── README.md
 ```
 
@@ -390,18 +372,15 @@ t1-mlops-stack/
 
 ```bibtex
 @software{awari2026t1mlops,
-  author    = {Awari, Ajinkya},
-  title     = {T1 MLOps Stack: Serving and Verification for ChestXplain},
-  year      = {2026},
-  url       = {https://github.com/ajinkya-awari/t1-mlops-stack},
-  license   = {MIT}
+  author  = {Awari, Ajinkya},
+  title   = {T1 MLOps Stack: Serving and Verification for ChestXplain},
+  year    = {2026},
+  url     = {https://github.com/ajinkya-awari/t1-mlops-stack},
+  license = {MIT}
 }
 ```
 
 ---
 
-## Disclaimer
-
-This system is a **research prototype** and is **not** intended for clinical diagnostic use.
-Predictions should not replace professional medical evaluation.
-Always consult a qualified radiologist for diagnosis.
+> Research prototype. Not for clinical or diagnostic use. Do not use predictions as a substitute
+> for professional medical evaluation.

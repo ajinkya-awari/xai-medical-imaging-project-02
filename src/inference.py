@@ -74,7 +74,7 @@ def predict_probabilities(model, image, device=None):
 
 
 def probabilities_payload(probabilities):
-    """Create the stable, label-ordered response payload for probabilities."""
+    """Build the label-ordered response dict with top prediction and confidence."""
     values = np.asarray(probabilities, dtype=np.float32)
     if values.shape != (CFG.NUM_CLASSES,):
         raise ValueError(f"Expected {CFG.NUM_CLASSES} probabilities, got {values.shape}.")
@@ -93,7 +93,7 @@ def probabilities_payload(probabilities):
 
 
 def png_base64(image_np):
-    """Encode an RGB uint8 image as a transport-safe base64 PNG string."""
+    """Encode a uint8 RGB image as a base64 PNG string."""
     image = Image.fromarray(np.asarray(image_np, dtype=np.uint8), mode="RGB")
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
