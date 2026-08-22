@@ -3,7 +3,7 @@ title: T1 MLOps Stack
 emoji: 🩻
 colorFrom: blue
 colorTo: indigo
-sdk: streamlit
+sdk: gradio
 app_file: app.py
 pinned: false
 ---
@@ -13,7 +13,7 @@ pinned: false
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-orange)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?logo=fastapi)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-red)
+![Gradio](https://img.shields.io/badge/Gradio-4.0%2B-orange)
 ![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker)
 ![W&B](https://img.shields.io/badge/W%26B-tracked-orange?logo=weightsandbiases)
 ![HF Model](https://img.shields.io/badge/HF%20Model-ajinkya1807%2Ft1--mlops--stack--model-yellow?logo=huggingface)
@@ -37,6 +37,7 @@ This project adds those three layers and produces four verifiable public artifac
 | W&B smoke run | Live | Run `zu1zp34y`, 256 samples, 1 epoch — train\_auc=0.553, val\_auc=0.553 |
 | HF model repo | Live | [ajinkya1807/t1-mlops-stack-model](https://huggingface.co/ajinkya1807/t1-mlops-stack-model) |
 | Docker CPU API | Verified locally | `docker compose up --build`, /health 200; no Docker Hub image published |
+| HF Space demo | Live | [ajinkya1807/xai-medical-imaging](https://huggingface.co/spaces/ajinkya1807/xai-medical-imaging) |
 
 ---
 
@@ -105,7 +106,7 @@ densenet121_chestxray.pth ──► HF model repo ajinkya1807/t1-mlops-stack-mod
         |          |
         |          ├──► api/main.py -> Docker CPU container (localhost:8000)
         |          |
-        |          └──► app.py -> Streamlit (local demo)
+        |          └──► app.py -> Gradio (HF Space + local)
         |
         └──► model card README.md (renders on HF)
 ```
@@ -217,22 +218,23 @@ Or set `MODEL_PATH` to a path inside the container.
 
 ---
 
-## 5. Streamlit app
+## 5. Gradio demo
 
 ### Run locally
 
 ```bash
-streamlit run app.py
+python app.py
 ```
+
+### Live Space
+
+[huggingface.co/spaces/ajinkya1807/xai-medical-imaging](https://huggingface.co/spaces/ajinkya1807/xai-medical-imaging)
 
 The app loads the local checkpoint at `models/densenet121_chestxray.pth` if present. If not,
 it downloads from `ajinkya1807/t1-mlops-stack-model` (pinned to commit `efa149c`).
 
-Upload limits: 10 MB encoded, 20 million pixels decoded. Grad-CAM is capped at the top 4
-predictions to keep CPU inference under a few seconds.
-
-A research-only warning appears before and after each inference. Do not upload patient-identifiable
-or restricted clinical images.
+Upload limit: 20 million pixels decoded. The Grad-CAM overlay is generated for the top
+predicted pathology. Do not upload patient-identifiable or restricted clinical images.
 
 
 ---
@@ -244,6 +246,7 @@ or restricted clinical images.
 | W&B tracking | Closed | Run `zu1zp34y`, train_auc=0.553, val_auc=0.553 |
 | Docker build + /health | Closed | `compose build + up`, /health 200 |
 | HF model repository | Closed | [commit efa149c](https://huggingface.co/ajinkya1807/t1-mlops-stack-model/commit/efa149c) |
+| HF Space demo | Closed | [ajinkya1807/xai-medical-imaging](https://huggingface.co/spaces/ajinkya1807/xai-medical-imaging) |
 
 ---
 
