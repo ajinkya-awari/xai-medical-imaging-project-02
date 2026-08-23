@@ -5,6 +5,7 @@ from pathlib import Path
 
 import gradio as gr
 import numpy as np
+import spaces
 from huggingface_hub import hf_hub_download
 from PIL import Image
 
@@ -51,6 +52,7 @@ def _get_model():
     return _model
 
 
+@spaces.GPU
 def predict(image):
     if image is None:
         return None, []
@@ -98,8 +100,6 @@ demo = gr.Interface(
         f"⚠️ {RESEARCH_WARNING}\n\n"
         f"ℹ️ {DISCLAIMER}"
     ),
-    allow_flagging="never",
-    theme=gr.themes.Soft(),
 )
 
 if __name__ == "__main__":
