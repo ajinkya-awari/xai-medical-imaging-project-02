@@ -1,0 +1,117 @@
+"""Unified interface for three XAI methods: Grad-CAM, SHAP, and Integrated Gradients."""
+
+import numpy as np
+import torch
+import torch.nn as nn
+from captum.attr import IntegratedGradients
+import shap
+
+from src.config import CFG
+from src.gradcam import GradCAM, apply_gradcam_overlay
+
+
+def normalize_heatmap(attr_map):
+    """Min-max normalize attribution map to [0, 1] range."""
+    attr_map = np.asarray(attr_map, dtype=np.float32)
+    min_val = attr_map.min()
+    max_val = attr_map.max()
+
+    if max_val - min_val < 1e-8:
+        return np.zeros_like(attr_map, dtype=np.float32)
+
+    normalized = (attr_map - min_val) / (max_val - min_val + 1e-8)
+    return np.clip(normalized, 0, 1).astype(np.float32)
+
+
+class GradCAMExplainer:
+    """Gradient-weighted Class Activation Mapping."""
+
+    def __init__(self, model):
+        self.model = model
+        self.gradcam = GradCAM(self.model)
+        self.overlay_alpha = 0.5
+
+    def explain(self, image_tensor, class_idx):
+        """Generate Grad-CAM heatmap and overlay."""
+        class_idx = int(class_idx)
+        heatmap = self.gradcam.generate(image_tensor, class_idx)
+        assert heatmap.shape == (224, 224)
+        heatmap_normalized = normalize_heatmap(heatmap)
+        overlay_rgb = apply_gradcam_overlay(image_tensor, heatmap_normalized, alpha=self.overlay_alpha)
+        assert overlay_rgb.shape == (224, 224, 3)
+        assert overlay_rgb.dtype == np.uint8
+        return heatmap_normalized, overlay_rgb
+
+    def cleanup(self):
+        """Remove backward hooks to prevent memory leaks."""
+        self.gradcam.remove_hooks()
+
+
+class SHAPExplainer:
+    """SHAP Deep Explainer with GradientExplainer fallback."""
+
+    def __init__(self, model, background):
+        self.model = model
+        self.background = background
+        self.overlay_alpha = 0.5
+        device = next(model.parameters()).device
+        self.background = background.to(device)
+
+        try:
+            self.explainer = shap.DeepExplainer(self.model, self.background)
+        except (RuntimeError, Exception):
+            self.explainer = shap.GradientExplainer(self.model, [self.background])
+
+    def explain(self, image_tensor, class_idx):
+        """Generate SHAP attribution and overlay."""
+        class_idx = int(class_idx)
+        shap_values = self.explainer.shap_values(image_tensor)
+
+        if isinstance(shap_values, list):
+            assert len(shap_values) == CFG.NUM_CLASSES
+            class_values = shap_values[class_idx]
+        else:
+            values = np.asarray(shap_values)
+            assert values.ndim == 5 and values.shape[-1] == CFG.NUM_CLASSES
+            class_values = values[..., int(class_idx)]
+
+        assert np.asarray(class_values).shape == (1, 3, 224, 224)
+        attr = np.abs(np.asarray(class_values)[0]).mean(axis=0)
+        assert attr.shape == (224, 224)
+        heatmap_normalized = normalize_heatmap(attr)
+        overlay_rgb = apply_gradcam_overlay(image_tensor, heatmap_normalized, alpha=self.overlay_alpha)
+        assert overlay_rgb.shape == (224, 224, 3)
+        assert overlay_rgb.dtype == np.uint8
+        return heatmap_normalized, overlay_rgb
+
+
+class IGExplainer:
+    """Integrated Gradients via Captum."""
+
+    def __init__(self, model, n_steps=50):
+        self.model = model
+        self.n_steps = n_steps
+        self.overlay_alpha = 0.5
+        self.ig = IntegratedGradients(self.model)
+
+    def explain(self, image_tensor, class_idx):
+        """Generate Integrated Gradients attribution and overlay."""
+        target = int(class_idx)
+        baseline = torch.zeros_like(image_tensor)
+
+        attrs = self.ig.attribute(
+            image_tensor,
+            baselines=baseline,
+            target=target,
+            n_steps=self.n_steps,
+            return_convergence_delta=False
+        )
+
+        assert attrs.shape == (1, 3, 224, 224)
+        attr = attrs.detach().abs().mean(1)[0].cpu().numpy()
+        assert attr.shape == (224, 224)
+        heatmap_normalized = normalize_heatmap(attr)
+        overlay_rgb = apply_gradcam_overlay(image_tensor, heatmap_normalized, alpha=self.overlay_alpha)
+        assert overlay_rgb.shape == (224, 224, 3)
+        assert overlay_rgb.dtype == np.uint8
+        return heatmap_normalized, overlay_rgb

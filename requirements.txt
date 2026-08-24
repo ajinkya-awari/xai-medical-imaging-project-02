@@ -24,6 +24,8 @@ fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 python-multipart>=0.0.9
 huggingface_hub>=0.23.0
+shap>=0.44
+captum>=0.7
 tqdm>=4.65.0
 gdown
 wandb

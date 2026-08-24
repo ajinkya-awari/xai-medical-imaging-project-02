@@ -58,3 +58,14 @@ class CFG:
         "Consolidation", "Edema", "Emphysema", "Fibrosis",
         "Pleural_Thickening", "Hernia",
     ]
+
+    # ── XAI benchmark settings (Project 02) ─────────────────────────────────────
+    BBOX_PATH          = os.path.join(DATA_DIR, "BBox_List_2017.csv")
+    XAI_OUTPUT_DIR     = os.path.join(OUTPUT_DIR, "xai")
+    SHAP_BG_SAMPLES    = 50
+    IG_N_STEPS         = 50
+    IOU_PERCENTILE     = 90
+    BBOX_PATHOLOGIES   = [
+        "Atelectasis", "Cardiomegaly", "Effusion", "Infiltration",
+        "Mass", "Nodule", "Pneumonia", "Pneumothorax",
+    ]

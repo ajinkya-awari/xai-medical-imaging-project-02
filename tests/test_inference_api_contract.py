@@ -1,14 +1,21 @@
 import base64
 import io
+from pathlib import Path
+import sys
+import types
 
 import numpy as np
 import pytest
 from PIL import Image
+import torch
 from fastapi.testclient import TestClient
 
 from api.main import app
 from src.config import CFG
 from src.inference import preprocess_image, probabilities_payload
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.fixture(autouse=True)
@@ -40,6 +47,33 @@ def test_probabilities_payload_preserves_all_labels_and_top_prediction():
     assert set(payload["probabilities"]) == set(CFG.DISEASE_LABELS)
     assert payload["top_prediction"]["label"] == CFG.DISEASE_LABELS[-1]
     assert payload["confidence"] == pytest.approx(0.99, abs=1e-5)
+
+
+def test_checkpoint_loader_uses_safe_tensor_deserialization():
+    source = (REPO_ROOT / "src" / "inference.py").read_text(encoding="utf-8")
+
+    assert "weights_only=True" in source
+    assert "weights_only=False" not in source
+
+
+def test_checkpoint_loader_reads_state_dict_and_returns_eval_model(monkeypatch, tmp_path):
+    from src.inference import load_checkpoint_model
+
+    class FakeModel(torch.nn.Module):
+        def __init__(self, num_classes, pretrained):
+            super().__init__()
+            self.weight = torch.nn.Parameter(torch.zeros(1))
+
+    fake_model_module = types.ModuleType("src.model")
+    fake_model_module.ChestXrayModel = FakeModel
+    monkeypatch.setitem(sys.modules, "src.model", fake_model_module)
+    checkpoint_path = tmp_path / "fixture-checkpoint.pth"
+    torch.save({"model_state_dict": {"weight": torch.tensor([3.0])}}, checkpoint_path)
+
+    model = load_checkpoint_model(model_path=checkpoint_path, device="cpu")
+
+    assert model.training is False
+    assert model.weight.item() == pytest.approx(3.0)
 
 
 def test_health_and_metadata_are_available_without_model_weights():

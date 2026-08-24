@@ -38,7 +38,7 @@ def load_checkpoint_model(model_path=None, device=None):
     from src.model import ChestXrayModel
 
     target_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
-    checkpoint = torch.load(str(resolved_path), map_location=target_device, weights_only=False)
+    checkpoint = torch.load(str(resolved_path), map_location=target_device, weights_only=True)
     state_dict = checkpoint.get("model_state_dict") if isinstance(checkpoint, dict) else None
     if state_dict is None:
         raise ValueError("Checkpoint must contain a model_state_dict mapping.")

@@ -11,6 +11,11 @@ class ChestXrayModel(nn.Module):
         weights       = models.DenseNet121_Weights.IMAGENET1K_V1 if pretrained else None
         base          = models.densenet121(weights=weights)
         self.features = base.features
+        # SHAP/DeepExplainer installs backward hooks; in-place ReLUs make
+        # those hooked views invalid under current PyTorch autograd.
+        for module in self.features.modules():
+            if isinstance(module, nn.ReLU):
+                module.inplace = False
         self.classifier = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             nn.Flatten(),

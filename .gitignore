@@ -39,10 +39,13 @@ data/
 models/*.pth
 models/*.h5
 
-# Outputs — keep charts and results, exclude large files only
-outputs/*.pt
-outputs/*.pth
-outputs/dashboard.html
+# Outputs — local-only generated artifacts; never publish by default
+outputs/
+
+# Local verification fixtures and pre-existing generated images
+__results___files/
+test_synthetic_xray.png
+background_50.pt
 
 # Jupyter
 .ipynb_checkpoints/
