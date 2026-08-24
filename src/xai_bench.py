@@ -148,8 +148,7 @@ def main():
             json.dump(results, f, indent=2)
         print(f"Wrote {output_file}")
 
-    print("
-IoU Summary:")
+    print("\nIoU Summary:")
     for method, results in all_results.items():
         print(f"  {method}: mean IoU = {results['mean_iou']:.4f}")
 
