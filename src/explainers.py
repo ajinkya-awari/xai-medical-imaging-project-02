@@ -3,6 +3,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import cv2
 from captum.attr import IntegratedGradients
 import shap
 
@@ -35,9 +36,12 @@ class GradCAMExplainer:
         """Generate Grad-CAM heatmap and overlay."""
         class_idx = int(class_idx)
         heatmap = self.gradcam.generate(image_tensor, class_idx)
+        heatmap = cv2.resize(heatmap, (224, 224))
         assert heatmap.shape == (224, 224)
         heatmap_normalized = normalize_heatmap(heatmap)
-        overlay_rgb = apply_gradcam_overlay(image_tensor, heatmap_normalized, alpha=self.overlay_alpha)
+        image_np = image_tensor[0].permute(1, 2, 0).detach().cpu().numpy()
+        image_np = (image_np * 255).astype(np.uint8)
+        overlay_rgb = apply_gradcam_overlay(image_np, heatmap_normalized, alpha=self.overlay_alpha)
         assert overlay_rgb.shape == (224, 224, 3)
         assert overlay_rgb.dtype == np.uint8
         return heatmap_normalized, overlay_rgb
@@ -79,7 +83,9 @@ class SHAPExplainer:
         attr = np.abs(np.asarray(class_values)[0]).mean(axis=0)
         assert attr.shape == (224, 224)
         heatmap_normalized = normalize_heatmap(attr)
-        overlay_rgb = apply_gradcam_overlay(image_tensor, heatmap_normalized, alpha=self.overlay_alpha)
+        image_np = image_tensor[0].permute(1, 2, 0).detach().cpu().numpy()
+        image_np = (image_np * 255).astype(np.uint8)
+        overlay_rgb = apply_gradcam_overlay(image_np, heatmap_normalized, alpha=self.overlay_alpha)
         assert overlay_rgb.shape == (224, 224, 3)
         assert overlay_rgb.dtype == np.uint8
         return heatmap_normalized, overlay_rgb
@@ -111,7 +117,9 @@ class IGExplainer:
         attr = attrs.detach().abs().mean(1)[0].cpu().numpy()
         assert attr.shape == (224, 224)
         heatmap_normalized = normalize_heatmap(attr)
-        overlay_rgb = apply_gradcam_overlay(image_tensor, heatmap_normalized, alpha=self.overlay_alpha)
+        image_np = image_tensor[0].permute(1, 2, 0).detach().cpu().numpy()
+        image_np = (image_np * 255).astype(np.uint8)
+        overlay_rgb = apply_gradcam_overlay(image_np, heatmap_normalized, alpha=self.overlay_alpha)
         assert overlay_rgb.shape == (224, 224, 3)
         assert overlay_rgb.dtype == np.uint8
         return heatmap_normalized, overlay_rgb
