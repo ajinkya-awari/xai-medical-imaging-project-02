@@ -56,8 +56,8 @@ def main():
     explainers = {
         "Original": None,
         "Grad-CAM": GradCAMExplainer(model),
-        "SHAP": SHAPExplainer(model, torch.randn(50, 3, 224, 224).to(device), device=device),
-        "Integrated Gradients": IGExplainer(model, device=device),
+        "SHAP": SHAPExplainer(model, torch.randn(50, 3, 224, 224).to(device)),
+        "Integrated Gradients": IGExplainer(model),
     }
 
     data_dir = Path(CFG.DATA_DIR) / "images"
@@ -93,8 +93,7 @@ def main():
             facecolor="none",
         )
         axes[plot_row, col].add_patch(rect)
-        axes[plot_row, col].set_title(f"Original
-({pathology})")
+        axes[plot_row, col].set_title(f"Original\n({pathology})")
         axes[plot_row, col].axis("off")
 
         for col, method in enumerate(["Grad-CAM", "SHAP", "Integrated Gradients"], start=1):

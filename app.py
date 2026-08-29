@@ -82,9 +82,9 @@ def _get_explainer(method):
             _explainers[method] = GradCAMExplainer(model)
         elif method == "SHAP":
             bg = _load_background().to(device)
-            _explainers[method] = SHAPExplainer(model, bg, device=device)
+            _explainers[method] = SHAPExplainer(model, bg)
         elif method == "Integrated Gradients":
-            _explainers[method] = IGExplainer(model, device=device)
+            _explainers[method] = IGExplainer(model)
     return _explainers[method]
 
 

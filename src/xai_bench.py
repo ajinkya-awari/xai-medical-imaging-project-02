@@ -130,8 +130,8 @@ def main():
 
     explainers = {
         "Grad-CAM": GradCAMExplainer(model),
-        "SHAP": SHAPExplainer(model, torch.randn(50, 3, 224, 224).to(device), device=device),
-        "Integrated Gradients": IGExplainer(model, device=device),
+        "SHAP": SHAPExplainer(model, torch.randn(50, 3, 224, 224).to(device)),
+        "Integrated Gradients": IGExplainer(model),
     }
 
     data_dir = Path(CFG.DATA_DIR) / "images"
