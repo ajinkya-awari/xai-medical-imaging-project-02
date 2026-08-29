@@ -13,7 +13,7 @@ RUN apt-get update \
 
 COPY requirements.txt .
 RUN pip install --upgrade pip \
-    && pip install torch==2.12.1 torchvision==0.27.1 --index-url https://download.pytorch.org/whl/cpu \
+    && pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu \
     && pip install -r requirements.txt
 
 COPY api ./api
