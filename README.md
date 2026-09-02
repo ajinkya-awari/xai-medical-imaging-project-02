@@ -1,13 +1,3 @@
----
-title: T1 MLOps Stack
-emoji: 🩻
-colorFrom: blue
-colorTo: indigo
-sdk: gradio
-app_file: app.py
-pinned: false
----
-
 <div align="center">
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=T1%20MLOps%20Stack&fontSize=52&fontColor=fff&animation=twinkling&fontAlignY=38&desc=Production%20Layer%20for%20DenseNet121%20Chest%20X-ray%20Classifier&descAlignY=58&descAlign=50&descSize=16"/>
@@ -25,13 +15,9 @@ pinned: false
 ![HF Model](https://img.shields.io/badge/HF%20Model-ajinkya1807%2Ft1--mlops--stack--model-yellow?logo=huggingface)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-Experiment tracking, a Docker-hosted inference API, and Streamlit serving for
-[ChestXplain](https://github.com/ajinkya-awari/xai-medical-imaging), a DenseNet121 chest X-ray
-classifier trained on NIH ChestX-ray14.
+Production MLOps layer for [ChestXplain](https://github.com/ajinkya-awari/xai-medical-imaging), a DenseNet121 chest X-ray classifier trained on NIH ChestX-ray14 with 0.769 mean AUC across 14 pathologies.
 
-ChestXplain trains to 0.769 mean AUC across 14 pathologies but had no way to track experiment
-metrics, serve predictions through an API, or run reproducibly outside the training notebook.
-This project adds those three layers and produces four verifiable public artifacts in the process.
+ChestXplain was a working model without production infrastructure. I added three layers: Weights & Biases experiment tracking for reproducible metrics, a FastAPI inference endpoint with Grad-CAM explanations, and Docker containerization for scalable deployment. The project produces four verifiable public artifacts: GitHub source, W&B experiment log, HF model checkpoint, and HF Spaces live demo.
 
 ---
 
@@ -47,9 +33,9 @@ This project adds those three layers and produces four verifiable public artifac
 
 ---
 
-## What was added
+## Features
 
-### W&B tracking
+### W&B Experiment Tracking
 
 `src/train.py` logs loss, AUC, and learning rate each epoch in both the warmup and finetune
 phases. Run `smoke_train.py` on Kaggle to verify the hooks work without pulling the full NIH

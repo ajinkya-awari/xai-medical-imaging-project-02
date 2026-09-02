@@ -11,6 +11,18 @@ build/
 # Local agent control files — never publish instructions or memory
 .claude/
 
+# Planning and session documentation — internal only
+FLOW.md
+SESSION_SUMMARY.md
+HANDOVER.md
+DECISIONS.md
+ARCHITECTURE.md
+CONSTRAINTS.md
+TEST_CHECKLIST.md
+ROLLBACK.md
+BUG.md
+FEATURE.md
+
 # Virtual envs
 venv/
 env/
