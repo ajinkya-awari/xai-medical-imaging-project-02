@@ -8,6 +8,12 @@ app_file: app.py
 pinned: false
 ---
 
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=T1%20MLOps%20Stack&fontSize=52&fontColor=fff&animation=twinkling&fontAlignY=38&desc=Production%20Layer%20for%20DenseNet121%20Chest%20X-ray%20Classifier&descAlignY=58&descAlign=50&descSize=16"/>
+
+</div>
+
 # T1 MLOps Stack
 
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
@@ -20,7 +26,7 @@ pinned: false
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Experiment tracking, a Docker-hosted inference API, and Streamlit serving for
-[ChestXplain](https://github.com/ajinkya-awari/t1-mlops-stack), a DenseNet121 chest X-ray
+[ChestXplain](https://github.com/ajinkya-awari/xai-medical-imaging), a DenseNet121 chest X-ray
 classifier trained on NIH ChestX-ray14.
 
 ChestXplain trains to 0.769 mean AUC across 14 pathologies but had no way to track experiment
@@ -375,7 +381,7 @@ t1-mlops-stack/
   author  = {Awari, Ajinkya},
   title   = {T1 MLOps Stack: Serving and Verification for ChestXplain},
   year    = {2026},
-  url     = {https://github.com/ajinkya-awari/t1-mlops-stack},
+  url     = {https://github.com/ajinkya-awari/xai-medical-imaging},
   license = {MIT}
 }
 ```
@@ -384,3 +390,7 @@ t1-mlops-stack/
 
 > Research prototype. Not for clinical or diagnostic use. Do not use predictions as a substitute
 > for professional medical evaluation.
+
+---
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=100&section=footer"/>
