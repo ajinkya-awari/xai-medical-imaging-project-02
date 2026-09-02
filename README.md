@@ -33,7 +33,7 @@ This project adds those three layers and produces four verifiable public artifac
 
 | Artifact | Status | Link / Evidence |
 |---|---|---|
-| GitHub | Live | [ajinkya-awari/t1-mlops-stack](https://github.com/ajinkya-awari/t1-mlops-stack) |
+| GitHub | Live | [ajinkya-awari/xai-medical-imaging](https://github.com/ajinkya-awari/xai-medical-imaging) |
 | W&B smoke run | Live | Run `zu1zp34y`, 256 samples, 1 epoch — train\_auc=0.553, val\_auc=0.553 |
 | HF model repo | Live | [ajinkya1807/t1-mlops-stack-model](https://huggingface.co/ajinkya1807/t1-mlops-stack-model) |
 | Docker CPU API | Verified locally | `docker compose up --build`, /health 200; no Docker Hub image published |
@@ -260,8 +260,8 @@ for the container API path.
 ### Clone
 
 ```bash
-git clone https://github.com/ajinkya-awari/t1-mlops-stack.git
-cd t1-mlops-stack
+git clone https://github.com/ajinkya-awari/xai-medical-imaging.git
+cd xai-medical-imaging
 ```
 
 ### Install
@@ -275,7 +275,7 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install --upgrade pip
-pip install torch==2.12.1 torchvision==0.27.1 --index-url https://download.pytorch.org/whl/cpu
+pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 ```
 
