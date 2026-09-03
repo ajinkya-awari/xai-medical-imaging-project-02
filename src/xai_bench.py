@@ -66,7 +66,7 @@ def run_benchmark(model, device, explainers, bbox_df, data_dir, method_name):
         pathology = row["finding_label"]
         class_idx = CFG.DISEASE_LABELS.index(pathology)
 
-        image_path = data_dir / f"{image_idx}.png"
+        image_path = data_dir / image_idx
         if not image_path.is_file():
             continue
 
