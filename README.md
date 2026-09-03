@@ -1,85 +1,67 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=T1%20MLOps%20Stack&fontSize=52&fontColor=fff&animation=twinkling&fontAlignY=38&desc=Production%20Layer%20for%20DenseNet121%20Chest%20X-ray%20Classifier&descAlignY=58&descAlign=50&descSize=16"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=XAI%20Medical%20Imaging&fontSize=52&fontColor=fff&animation=twinkling&fontAlignY=38&desc=Grad-CAM%20%2B%20SHAP%20%2B%20Integrated%20Gradients%20on%20NIH%20Chest%20X-rays&descAlignY=58&descAlign=50&descSize=16"/>
 
 </div>
 
-# T1 MLOps Stack
+# XAI Medical Imaging
 
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-orange)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?logo=fastapi)
-![Gradio](https://img.shields.io/badge/Gradio-4.0%2B-orange)
-![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker)
-![W&B](https://img.shields.io/badge/W%26B-tracked-orange?logo=weightsandbiases)
-![HF Model](https://img.shields.io/badge/HF%20Model-ajinkya1807%2Ft1--mlops--stack--model-yellow?logo=huggingface)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.11.0-orange)
+![SHAP](https://img.shields.io/badge/SHAP-0.44%2B-blueviolet)
+![Captum](https://img.shields.io/badge/Captum-0.7%2B-green)
+![Dataset](https://img.shields.io/badge/Dataset-NIH%20ChestX--ray14-yellow)
+![HF Space](https://img.shields.io/badge/HF%20Space-Live-brightgreen?logo=huggingface)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-Production MLOps layer for [ChestXplain](https://github.com/ajinkya-awari/xai-medical-imaging), a DenseNet121 chest X-ray classifier trained on NIH ChestX-ray14 with 0.769 mean AUC across 14 pathologies.
+Quantitative XAI benchmark for chest X-ray classification. Three explanation methods — Grad-CAM, SHAP GradientExplainer, and Integrated Gradients — evaluated against NIH ChestX-ray14 ground-truth bounding box annotations using Intersection-over-Union (IoU).
 
-ChestXplain was a working model without production infrastructure. I added three layers: Weights & Biases experiment tracking for reproducible metrics, a FastAPI inference endpoint with Grad-CAM explanations, and Docker containerization for scalable deployment. The project produces four verifiable public artifacts: GitHub source, W&B experiment log, HF model checkpoint, and HF Spaces live demo.
+This is the evaluation layer on top of [T1 MLOps Stack](https://github.com/ajinkya-awari/xai-medical-imaging): the same DenseNet121 checkpoint, with three explanation heads added and benchmarked against clinical annotations. The project targets Holistic AI's P27 XAI evaluation framework.
 
 ---
 
 ## Artifacts
 
-| Artifact | Status | Link / Evidence |
+| Artifact | Status | Link |
 |---|---|---|
-| GitHub | Live | [ajinkya-awari/xai-medical-imaging](https://github.com/ajinkya-awari/xai-medical-imaging) |
-| W&B smoke run | Live | Run `zu1zp34y`, 256 samples, 1 epoch — train\_auc=0.553, val\_auc=0.553 |
+| GitHub | Live | [ajinkya-awari/xai-medical-imaging-project-02](https://github.com/ajinkya-awari/xai-medical-imaging-project-02) |
 | HF model repo | Live | [ajinkya1807/t1-mlops-stack-model](https://huggingface.co/ajinkya1807/t1-mlops-stack-model) |
-| Docker CPU API | Verified locally | `docker compose up --build`, /health 200; no Docker Hub image published |
 | HF Space demo | Live | [ajinkya1807/xai-medical-imaging](https://huggingface.co/spaces/ajinkya1807/xai-medical-imaging) |
+| IoU benchmark | In progress | Grad-CAM: 0.1289 mean IoU — SHAP and IG pending |
 
 ---
 
-## Features
+## XAI Methods
 
-### W&B Experiment Tracking
+Three explanation methods share a unified interface: `.explain(image_tensor, class_idx) → (heatmap_2D, overlay_rgb)`.
 
-`src/train.py` logs loss, AUC, and learning rate each epoch in both the warmup and finetune
-phases. Run `smoke_train.py` on Kaggle to verify the hooks work without pulling the full NIH
-dataset locally. Smoke run `zu1zp34y` confirms it: `train_auc=0.55288`, `val_auc=0.55271`
-on 256 samples. That number is not the model's real AUC; it just proves the tracking fires.
+| Method | Implementation | Speed | Notes |
+|---|---|---|---|
+| Grad-CAM | `src/gradcam.py` wrapped by `GradCAMExplainer` | ~10 ms/image | Gradient backprop through DenseBlock4 |
+| SHAP | `SHAPExplainer` via `shap.GradientExplainer` | ~100–200 ms/image | 10-image background from training split |
+| Integrated Gradients | `IGExplainer` via Captum | ~50 ms/image | 50 steps, zero baseline |
 
-### Shared inference module
-
-`src/inference.py` is the single place that handles checkpoint loading, image preprocessing,
-sigmoid probabilities, Grad-CAM generation, and response encoding. Both `api/main.py` and
-`app.py` import from it. There is no duplicated model logic between the two serving paths.
-
-### FastAPI endpoint
-
-`api/main.py` exposes `/health`, `/metadata`, and `POST /predict`. The model loads once at
-FastAPI startup, not per request. Every prediction response includes all 14 label probabilities.
-Uploads that are not PNG/JPEG or exceed 10 MB are rejected before the model is touched.
-
-### Docker container
-
-A `python:3.11-slim` image with CPU-only PyTorch installed as a dedicated layer before the rest
-of the dependencies. No NIH data or model weights are baked in. The container expects the
-checkpoint mounted at `models/` or pointed to via `MODEL_PATH`.
-
-### HF model repository
-
-The 28.5 MB DenseNet121 checkpoint is published at `ajinkya1807/t1-mlops-stack-model`. The
-Streamlit app falls back to this when no local weights are found, pinned to commit `efa149c`
-for reproducibility.
+All three are benchmarked with the same 90th-percentile threshold IoU metric against the 8 NIH-annotated pathologies.
 
 ---
 
-## About ChestXplain
+## IoU Benchmark Results
 
-ChestXplain is the classifier this project serves. The architecture is DenseNet121 pretrained
-on ImageNet, fine-tuned on NIH ChestX-ray14 with a two-phase schedule: the backbone freezes
-during warmup, then the full network trains in the finetune phase. The output layer is 14
-independent sigmoid nodes, one per thoracic pathology. Grad-CAM targets the final dense block.
+IoU computed against NIH ChestX-ray14 bounding box annotations (8 pathologies, 861 annotated records). Attribution maps thresholded at the 90th percentile; scaled from 1024×1024 image space to 224×224 model input.
 
-Full training baseline (20K images, 10 epochs, Kaggle T4 GPU): mean test AUC 0.769.
-CheXNet on the full 112K dataset: 0.841.
+| Pathology | Grad-CAM | SHAP | IG |
+|---|:---:|:---:|:---:|
+| Atelectasis | — | — | — |
+| Cardiomegaly | — | — | — |
+| Effusion | — | — | — |
+| Infiltrate | — | — | — |
+| Mass | — | — | — |
+| Nodule | — | — | — |
+| Pneumonia | — | — | — |
+| Pneumothorax | — | — | — |
+| **Mean** | **0.1289** | — | — |
 
-Training references: Wang et al. 2017 (NIH ChestX-ray14), Huang et al. 2017 (DenseNet),
-Selvaraju et al. 2017 (Grad-CAM), Rajpurkar et al. 2017 (CheXNet).
+*Table will be updated with full results after Kaggle benchmark run completes.*
 
 ---
 
@@ -89,156 +71,41 @@ Selvaraju et al. 2017 (Grad-CAM), Rajpurkar et al. 2017 (CheXNet).
 NIH ChestX-ray14 (local only, never uploaded)
         |
         v
-src/train.py ── scalar metrics ──► W&B run zu1zp34y  (smoke: train_auc=0.553, val_auc=0.553)
-        |
-        v
 densenet121_chestxray.pth ──► HF model repo ajinkya1807/t1-mlops-stack-model
         |
-        ├──► src/inference.py ◄── shared module (preprocessing + Grad-CAM)
-        |          |
-        |          ├──► api/main.py -> Docker CPU container (localhost:8000)
-        |          |
-        |          └──► app.py -> Gradio (HF Space + local)
+        v
+src/inference.py (load_checkpoint_model, preprocess_image)
         |
-        └──► model card README.md (renders on HF)
+        ├──► src/explainers.py
+        │        ├── GradCAMExplainer   (wraps src/gradcam.py)
+        │        ├── SHAPExplainer      (shap.GradientExplainer)
+        │        └── IGExplainer        (captum IntegratedGradients)
+        |
+        ├──► src/xai_bench.py    ── IoU vs NIH BBox annotations → outputs/xai/*.json
+        ├──► src/xai_compare.py  ── 10-image × 3-method comparison grid → outputs/xai/*.png
+        └──► app.py              ── Gradio Space with method selector
 ```
 
 ---
 
-## 1. W&B experiment tracking
+## Features
 
-`src/train.py` logs these scalars each epoch in both the warmup and finetune loops:
+### Unified explainer interface
 
-| Metric | Variable | Notes |
-|---|---|---|
-| `train/loss` | `tr_loss` | Mean BCE loss across training batches |
-| `train/auc` | `tr_auc` | Mean AUC across 14 labels |
-| `val/loss` | `va_loss` | Mean BCE loss across validation batches |
-| `val/auc` | `va_auc` | Mean AUC across 14 labels |
-| `learning_rate` | scheduler output | LR after ReduceLROnPlateau |
-| `epoch` | loop counter | 1-indexed |
+`src/explainers.py` defines three classes behind a single contract:
+`.explain(image_tensor, class_idx)` returns `(heatmap_2D, overlay_rgb)` where `heatmap_2D` is a normalised `(H, W)` float array and `overlay_rgb` is a `(H, W, 3)` uint8 overlay.
 
-Smoke run `zu1zp34y`: 256 samples, 1 epoch. Verified: `train_auc=0.55288`, `val_auc=0.55271`.
-These confirm the tracking infrastructure works, not that the model has converged. Full training
-needs the complete 20K-image dataset.
+### IoU benchmark
 
----
+`src/xai_bench.py` evaluates each method against 861 NIH bounding box records across 8 pathologies. Bounding box coordinates are scaled from the 1024×1024 image space to 224×224. The 90th-percentile threshold selects the brightest 10% of each attribution map for comparison with the ground-truth box.
 
-## 2. Shared inference module
+### Comparison figures
 
-`src/inference.py` handles everything between raw input and model output:
+`src/xai_compare.py` generates a 10-image × 4-column grid (original + 3 methods) using `random.seed(42)` for reproducibility.
 
-| Function | What it does |
-|---|---|
-| `get_model_path()` | Resolves checkpoint from `MODEL_PATH` env var, local default, or HF Hub |
-| `load_checkpoint_model()` | Loads `checkpoint["model_state_dict"]`; does not accept raw state dicts |
-| `preprocess_image()` | PIL image to normalised batched tensor (ImageNet mean/std) |
-| `predict_probabilities()` | Forward pass returning 14 sigmoid probabilities |
-| `generate_gradcam_overlay()` | Grad-CAM on `DenseBlock4`; hooks cleaned up after each call |
-| `probabilities_payload()` | 14-label dict with top prediction and confidence score |
-| `run_inference()` | Probabilities + top-class Grad-CAM overlay + base64 PNG in one call |
+### Interactive demo
 
-Both `api/main.py` and `app.py` call these functions directly.
-
----
-
-## 3. FastAPI inference endpoint
-
-### Routes
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/health` | Model load status and research disclaimer |
-| `GET` | `/metadata` | Label list, HF model repo, mean AUC, dataset, disclaimer |
-| `POST` | `/predict` | PNG/JPEG up to 10 MB; returns all 14 probabilities + Grad-CAM |
-
-### Response schema (`POST /predict`)
-
-```json
-{
-  "predictions": [
-    {"label": "Pneumothorax", "probability": 0.832},
-    ...
-  ],
-  "top_prediction": "Pneumothorax",
-  "confidence": 0.832,
-  "gradcam_png_base64": "<base64 string>"
-}
-```
-
-### Example
-
-```bash
-curl -X POST http://127.0.0.1:8000/predict \
-  -F "file=@chest-xray.png"
-```
-
-API docs at `http://127.0.0.1:8000/docs`
-
-Without a valid checkpoint, `/health` and `/metadata` return 200, but `/predict` returns 503.
-
-> Not for clinical or diagnostic use. All responses include a `disclaimer` field.
-
----
-
-## 4. Docker
-
-### Build and start
-
-```bash
-docker compose up --build
-```
-
-No Docker Hub image is published. Build from source.
-
-### What the image contains
-
-- Base: `python:3.11-slim`
-- CPU PyTorch installed in a separate layer before `requirements.txt`
-- `opencv-python-headless` (no GUI libraries required in slim containers)
-- `src/`, `api/`, `app.py` with no NIH data, no credentials, and no weights baked in
-
-### Checkpoint
-
-```bash
-# compose.yaml handles this automatically:
-volumes:
-  - ./models:/app/models:ro
-```
-
-Or set `MODEL_PATH` to a path inside the container.
-
----
-
-## 5. Gradio demo
-
-### Run locally
-
-```bash
-python app.py
-```
-
-### Live Space
-
-[huggingface.co/spaces/ajinkya1807/xai-medical-imaging](https://huggingface.co/spaces/ajinkya1807/xai-medical-imaging)
-
-The app loads the local checkpoint at `models/densenet121_chestxray.pth` if present. If not,
-it downloads from `ajinkya1807/t1-mlops-stack-model` (pinned to commit `efa149c`).
-
-Upload limit: 20 million pixels decoded. The Grad-CAM overlay is generated for the top
-predicted pathology. Do not upload patient-identifiable or restricted clinical images.
-
-
----
-
-## Verification gates
-
-| Gate | Status | Evidence |
-|---|---|---|
-| W&B tracking | Closed | Run `zu1zp34y`, train_auc=0.553, val_auc=0.553 |
-| Docker build + /health | Closed | `compose build + up`, /health 200 |
-| HF model repository | Closed | [commit efa149c](https://huggingface.co/ajinkya1807/t1-mlops-stack-model/commit/efa149c) |
-| HF Space demo | Closed | [ajinkya1807/xai-medical-imaging](https://huggingface.co/spaces/ajinkya1807/xai-medical-imaging) |
+`app.py` is a Gradio Space with a method selector (Grad-CAM / SHAP / Integrated Gradients). Only the selected explainer is instantiated at runtime to stay within HF Space memory limits.
 
 ---
 
@@ -246,136 +113,98 @@ predicted pathology. Do not upload patient-identifiable or restricted clinical i
 
 ### Prerequisites
 
-Python 3.9 or newer. 8 GB RAM minimum (16 GB recommended for full training). Docker Desktop
-for the container API path.
+Python 3.9 or newer. CUDA recommended for SHAP and IG benchmarks.
 
 ### Clone
 
 ```bash
-git clone https://github.com/ajinkya-awari/xai-medical-imaging.git
-cd xai-medical-imaging
+git clone https://github.com/ajinkya-awari/xai-medical-imaging-project-02.git
+cd xai-medical-imaging-project-02
 ```
 
 ### Install
 
 ```bash
 python -m venv .venv
+source .venv/bin/activate  # Windows: .\.venv\Scripts\Activate.ps1
 
-# Windows
-.\.venv\Scripts\Activate.ps1
-# macOS / Linux
-source .venv/bin/activate
-
-pip install --upgrade pip
 pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 ```
 
-For GPU, replace the PyTorch install with the appropriate CUDA pair from
-[pytorch.org](https://pytorch.org/get-started/locally/).
-
-### Run the Streamlit app
+### Run the demo locally
 
 ```bash
-streamlit run app.py
+python app.py
 ```
 
-### Run the local API
+Loads `models/densenet121_chestxray.pth` if present; otherwise downloads from HF Hub.
+
+### Run the IoU benchmark (requires NIH data)
 
 ```bash
-uvicorn api.main:app --reload
+python -m src.xai_bench
 ```
 
-Needs a checkpoint at `models/densenet121_chestxray.pth` or via `MODEL_PATH`. Without one,
-`/predict` returns 503.
-
-### Build the Docker container
-
-```bash
-docker compose up --build
-```
-
----
-
-## Reproducing the smoke run on Kaggle
-
-The smoke run uses 256 NIH images and 1 epoch. No local data download needed.
-
-1. Open [kaggle.com](https://kaggle.com) and create a new notebook.
-2. Add dataset: **+ Add Data**, search `NIH Chest X-rays` (by `nih-chest-xrays`), add it.
-3. Add your W&B key: Notebook sidebar, **Secrets**, add `WANDB_API_KEY`, toggle
-   **Attach to notebook** on.
-4. In the first cell:
-
-```python
-from kaggle_secrets import UserSecretsClient
-import os
-os.environ["WANDB_API_KEY"] = UserSecretsClient().get_secret("WANDB_API_KEY")
-
-!git clone https://github.com/ajinkya-awari/t1-mlops-stack.git
-%cd t1-mlops-stack
-!pip install -q -r requirements.txt
-```
-
-5. Run the smoke:
-
-```python
-!python smoke_train.py
-```
-
-Do not increase `MAX_SAMPLES` or `NUM_EPOCHS` without a specific reason. The purpose of the
-smoke is to verify the tracking hooks, not to measure AUC.
+Set `CFG.DATA_DIR`, `CFG.BBOX_PATH`, and `CFG.MODEL_DIR` in `src/config.py` before running.
 
 ---
 
 ## Repository layout
 
 ```
-t1-mlops-stack/
+xai-medical-imaging-project-02/
 ├── src/
-│   ├── config.py        # Hyperparameters, paths, disease labels
-│   ├── dataset.py       # Data loading, transforms, train/val/test split
-│   ├── model.py         # DenseNet121 with freeze/unfreeze utilities
-│   ├── inference.py     # Preprocessing, prediction, Grad-CAM, encoding
-│   ├── train.py         # Two-phase training loop with W&B logging
-│   ├── evaluate.py      # Test AUC computation and ROC curves
-│   ├── gradcam.py       # Grad-CAM implementation
-│   ├── visualize.py     # Grad-CAM sample grid
-│   └── __init__.py
+│   ├── config.py        # Paths, disease labels, XAI settings
+│   ├── explainers.py    # GradCAMExplainer, SHAPExplainer, IGExplainer
+│   ├── xai_bench.py     # IoU benchmark against NIH BBox annotations
+│   ├── xai_compare.py   # 10-image × 3-method comparison figures
+│   ├── inference.py     # Checkpoint loading, preprocessing
+│   ├── gradcam.py       # Grad-CAM implementation (unchanged from T1)
+│   ├── dataset.py       # Data loading for background tensor sampling
+│   ├── model.py         # DenseNet121 architecture
+│   └── train.py, evaluate.py, visualize.py
 ├── api/
-│   └── main.py          # FastAPI: /health, /metadata, POST /predict
+│   └── main.py          # FastAPI /health, /metadata, POST /predict
 ├── tests/
-│   ├── test_day5_wandb_contract.py
-│   └── test_inference_api_contract.py
-├── outputs/             # Evaluation figures and test results
-├── app.py               # Streamlit app
-├── smoke_train.py       # 256-sample smoke for W&B gate
-├── run_all.py           # Train, evaluate, visualise
+│   ├── test_explainers_synthetic.py
+│   ├── test_inference_api_contract.py
+│   └── test_app_wiring.py
+├── notebooks/
+│   └── kaggle_xai_triple.ipynb   # Full benchmark notebook for Kaggle T4 GPU
+├── outputs/xai/         # IoU JSON results + comparison figures (generated)
+├── app.py               # Gradio Space with method selector
 ├── Dockerfile
-├── compose.yaml
 ├── requirements.txt
-├── packages.txt         # System packages for Streamlit build
 └── README.md
 ```
+
+---
+
+## Related work
+
+- Grad-CAM: Selvaraju et al. 2017 ([arXiv:1610.02055](https://arxiv.org/abs/1610.02055))
+- SHAP: Lundberg & Lee 2017 ([arXiv:1705.07874](https://arxiv.org/abs/1705.07874))
+- Integrated Gradients: Sundararajan et al. 2017 ([arXiv:1703.01365](https://arxiv.org/abs/1703.01365))
+- NIH ChestX-ray14: Wang et al. 2017
 
 ---
 
 ## Citation
 
 ```bibtex
-@software{awari2026t1mlops,
+@software{awari2026xaimedical,
   author  = {Awari, Ajinkya},
-  title   = {T1 MLOps Stack: Serving and Verification for ChestXplain},
+  title   = {XAI Medical Imaging: Benchmarking Grad-CAM, SHAP, and Integrated Gradients on NIH ChestX-ray14},
   year    = {2026},
-  url     = {https://github.com/ajinkya-awari/xai-medical-imaging},
+  url     = {https://github.com/ajinkya-awari/xai-medical-imaging-project-02},
   license = {MIT}
 }
 ```
 
 ---
 
-> Research prototype. Not for clinical or diagnostic use. Do not use predictions as a substitute
-> for professional medical evaluation.
+> Research prototype. Not for clinical or diagnostic use. Do not use predictions as a substitute for professional medical evaluation.
 
 ---
 

@@ -53,10 +53,16 @@ def main():
     model = load_checkpoint_model()
     device = next(model.parameters()).device
 
+    _bg_path = Path(CFG.MODEL_DIR) / "background_50.pt"
+    if _bg_path.is_file():
+        _bg = torch.load(str(_bg_path), map_location=device, weights_only=True)
+    else:
+        _bg = torch.randn(50, 3, 224, 224).to(device)
+
     explainers = {
         "Original": None,
         "Grad-CAM": GradCAMExplainer(model),
-        "SHAP": SHAPExplainer(model, torch.randn(50, 3, 224, 224).to(device)),
+        "SHAP": SHAPExplainer(model, _bg),
         "Integrated Gradients": IGExplainer(model),
     }
 
