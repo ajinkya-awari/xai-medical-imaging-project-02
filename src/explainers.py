@@ -4,11 +4,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 import cv2
-from captum.attr import IntegratedGradients
-import shap
 
 from src.config import CFG
 from src.gradcam import GradCAM, apply_gradcam_overlay
+
+# captum and shap are imported lazily inside SHAPExplainer / IGExplainer __init__
+# so that importing GradCAMExplainer alone does not trigger captum CUDA kernel loading,
+# which would corrupt the CUDA context before GradCAM's backward pass runs.
 
 
 def normalize_heatmap(attr_map):
@@ -55,6 +57,7 @@ class SHAPExplainer:
     """SHAP Deep Explainer with GradientExplainer fallback."""
 
     def __init__(self, model, background):
+        import shap as _shap  # lazy: do not load shap CUDA kernels until this class is used
         self.model = model
         self.background = background
         self.overlay_alpha = 0.5
@@ -62,9 +65,9 @@ class SHAPExplainer:
         self.background = background.to(device)
 
         try:
-            self.explainer = shap.DeepExplainer(self.model, self.background)
+            self.explainer = _shap.DeepExplainer(self.model, self.background)
         except (RuntimeError, Exception):
-            self.explainer = shap.GradientExplainer(self.model, [self.background])
+            self.explainer = _shap.GradientExplainer(self.model, [self.background])
 
     def explain(self, image_tensor, class_idx):
         """Generate SHAP attribution and overlay."""
@@ -95,6 +98,7 @@ class IGExplainer:
     """Integrated Gradients via Captum."""
 
     def __init__(self, model, n_steps=50):
+        from captum.attr import IntegratedGradients  # lazy: load captum only when IG is used
         self.model = model
         self.n_steps = n_steps
         self.overlay_alpha = 0.5
