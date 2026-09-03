@@ -61,6 +61,7 @@ def run_benchmark(model, device, explainers, bbox_df, data_dir, method_name):
     for pathology in CFG.BBOX_PATHOLOGIES:
         results["per_pathology"][pathology] = []
 
+    not_found = 0
     for idx, row in tqdm(bbox_df.iterrows(), total=len(bbox_df), desc=f"Benchmarking {method_name}"):
         image_idx = row["image_index"]
         pathology = row["finding_label"]
@@ -68,6 +69,7 @@ def run_benchmark(model, device, explainers, bbox_df, data_dir, method_name):
 
         image_path = data_dir / image_idx
         if not image_path.is_file():
+            not_found += 1
             continue
 
         try:
@@ -97,8 +99,14 @@ def run_benchmark(model, device, explainers, bbox_df, data_dir, method_name):
             )
             results["per_pathology"][pathology].append(float(iou))
         except Exception as e:
-            print(f"Error on {image_idx} ({pathology}): {e}")
+            results.setdefault("_errors", []).append(
+                {"image_index": str(image_idx), "pathology": pathology, "error": str(e)}
+            )
             continue
+
+    results["not_found"] = not_found
+    results["error_count"] = len(results.get("_errors", []))
+    results["first_errors"] = results.pop("_errors", [])[:5]
 
     if results["per_image"]:
         all_ious = [img["iou"] for img in results["per_image"]]
