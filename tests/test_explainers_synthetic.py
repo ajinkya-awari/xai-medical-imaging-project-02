@@ -42,11 +42,11 @@ def test_gradcam_explainer_shape():
 
 
 def test_ig_explainer_shape():
-    with patch("src.explainers.IntegratedGradients") as mock_class:
+    with patch("captum.attr.IntegratedGradients") as mock_class:
         mock_ig = Mock()
         mock_class.return_value = mock_ig
         mock_ig.attribute.return_value = torch.randn(1, 3, 224, 224)
-        
+
         fake_model = Mock()
         fake_model.parameters.return_value = [torch.randn(1)]
         explainer = IGExplainer(fake_model)
