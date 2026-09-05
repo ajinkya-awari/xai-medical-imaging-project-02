@@ -54,26 +54,32 @@ class GradCAMExplainer:
 
 
 class SHAPExplainer:
-    """SHAP Deep Explainer with GradientExplainer fallback."""
+    """SHAP GradientExplainer (nsamples-controllable) with DeepExplainer fallback."""
 
     def __init__(self, model, background, nsamples=200):
         import shap as _shap  # lazy: do not load shap CUDA kernels until this class is used
         self.model = model
-        self.background = background
         self.overlay_alpha = 0.5
         self.nsamples = nsamples
         device = next(model.parameters()).device
         self.background = background.to(device)
 
+        # Prefer GradientExplainer: supports nsamples for fast approximation.
+        # Fall back to DeepExplainer (exact but slow, no nsamples support) only if GE fails.
         try:
-            self.explainer = _shap.DeepExplainer(self.model, self.background)
-        except (RuntimeError, Exception):
             self.explainer = _shap.GradientExplainer(self.model, [self.background])
+            self._is_gradient = True
+        except (RuntimeError, Exception):
+            self.explainer = _shap.DeepExplainer(self.model, self.background)
+            self._is_gradient = False
 
     def explain(self, image_tensor, class_idx):
         """Generate SHAP attribution and overlay."""
         class_idx = int(class_idx)
-        shap_values = self.explainer.shap_values(image_tensor, check_additivity=False, nsamples=self.nsamples)
+        if self._is_gradient:
+            shap_values = self.explainer.shap_values(image_tensor, check_additivity=False, nsamples=self.nsamples)
+        else:
+            shap_values = self.explainer.shap_values(image_tensor, check_additivity=False)
 
         if isinstance(shap_values, list):
             assert len(shap_values) == CFG.NUM_CLASSES
