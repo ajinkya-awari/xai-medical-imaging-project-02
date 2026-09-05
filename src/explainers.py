@@ -72,7 +72,7 @@ class SHAPExplainer:
     def explain(self, image_tensor, class_idx):
         """Generate SHAP attribution and overlay."""
         class_idx = int(class_idx)
-        shap_values = self.explainer.shap_values(image_tensor)
+        shap_values = self.explainer.shap_values(image_tensor, check_additivity=False)
 
         if isinstance(shap_values, list):
             assert len(shap_values) == CFG.NUM_CLASSES
