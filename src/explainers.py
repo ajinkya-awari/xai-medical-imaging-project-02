@@ -56,11 +56,12 @@ class GradCAMExplainer:
 class SHAPExplainer:
     """SHAP Deep Explainer with GradientExplainer fallback."""
 
-    def __init__(self, model, background):
+    def __init__(self, model, background, nsamples=200):
         import shap as _shap  # lazy: do not load shap CUDA kernels until this class is used
         self.model = model
         self.background = background
         self.overlay_alpha = 0.5
+        self.nsamples = nsamples
         device = next(model.parameters()).device
         self.background = background.to(device)
 
@@ -72,7 +73,7 @@ class SHAPExplainer:
     def explain(self, image_tensor, class_idx):
         """Generate SHAP attribution and overlay."""
         class_idx = int(class_idx)
-        shap_values = self.explainer.shap_values(image_tensor, check_additivity=False)
+        shap_values = self.explainer.shap_values(image_tensor, check_additivity=False, nsamples=self.nsamples)
 
         if isinstance(shap_values, list):
             assert len(shap_values) == CFG.NUM_CLASSES
