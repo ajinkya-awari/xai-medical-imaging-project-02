@@ -77,8 +77,10 @@ class SHAPExplainer:
         """Generate SHAP attribution and overlay."""
         class_idx = int(class_idx)
         if self._is_gradient:
-            shap_values = self.explainer.shap_values(image_tensor, check_additivity=False, nsamples=self.nsamples)
+            # GradientExplainer: supports nsamples, does NOT support check_additivity
+            shap_values = self.explainer.shap_values(image_tensor, nsamples=self.nsamples)
         else:
+            # DeepExplainer: supports check_additivity, does NOT support nsamples
             shap_values = self.explainer.shap_values(image_tensor, check_additivity=False)
 
         if isinstance(shap_values, list):
