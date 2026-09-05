@@ -27,7 +27,7 @@ This is the evaluation layer on top of [T1 MLOps Stack](https://github.com/ajink
 | GitHub | Live | [ajinkya-awari/xai-medical-imaging-project-02](https://github.com/ajinkya-awari/xai-medical-imaging-project-02) |
 | HF model repo | Live | [ajinkya1807/t1-mlops-stack-model](https://huggingface.co/ajinkya1807/t1-mlops-stack-model) |
 | HF Space demo | Live | [ajinkya1807/xai-medical-imaging](https://huggingface.co/spaces/ajinkya1807/xai-medical-imaging) |
-| IoU benchmark | In progress | Grad-CAM: 0.1289 mean IoU — SHAP and IG pending |
+| IoU benchmark | **Complete (2/3)** | Grad-CAM: **0.1289** · IG: **0.0792** mean IoU vs NIH BBox |
 
 ---
 
@@ -49,19 +49,21 @@ All three are benchmarked with the same 90th-percentile threshold IoU metric aga
 
 IoU computed against NIH ChestX-ray14 bounding box annotations (8 pathologies, 861 annotated records). Attribution maps thresholded at the 90th percentile; scaled from 1024×1024 image space to 224×224 model input.
 
-| Pathology | Grad-CAM | SHAP | IG |
+| Pathology | Grad-CAM | Integrated Gradients | SHAP |
 |---|:---:|:---:|:---:|
-| Atelectasis | — | — | — |
-| Cardiomegaly | — | — | — |
-| Effusion | — | — | — |
-| Infiltrate | — | — | — |
-| Mass | — | — | — |
-| Nodule | — | — | — |
-| Pneumonia | — | — | — |
-| Pneumothorax | — | — | — |
-| **Mean** | **0.1289** | — | — |
+| Atelectasis | 0.1047 | 0.0561 | — |
+| Cardiomegaly | **0.3373** | **0.2111** | — |
+| Effusion | 0.1757 | 0.0815 | — |
+| Infiltration | — | — | — |
+| Mass | 0.0938 | 0.0501 | — |
+| Nodule | 0.0172 | 0.0094 | — |
+| Pneumonia | 0.0066 | 0.0631 | — |
+| Pneumothorax | 0.0603 | 0.0230 | — |
+| **Mean IoU** | **0.1289** | **0.0792** | pending |
 
-*Table will be updated with full results after Kaggle benchmark run completes.*
+861 annotated records · 8 pathologies · 90th-percentile threshold · NIH ChestX-ray14 BBox annotations · scaled from 1024×1024 to 224×224.
+Cardiomegaly scores highest across both methods (large, well-defined bounding box). Nodule is hardest (small, diffuse lesion).
+SHAP benchmark in progress.
 
 ---
 
